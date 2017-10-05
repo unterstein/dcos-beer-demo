@@ -52,8 +52,8 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
 
     return new BeerResponse(
         hostAddress,
-        query.get("name").toString(),
-        query.get("style_name").toString(),
+        "" + query.get("name"),
+        "" + query.get("style_name"),
         query.get("descript").toString()
     );
   }
