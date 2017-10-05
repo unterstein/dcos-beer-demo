@@ -2,7 +2,7 @@
    "id":"beer",
    "apps":[
       {
-         "id":"database",
+         "id":"/beer/database",
          "cpus":1,
          "mem":1024,
          "instances":1,
@@ -37,7 +37,7 @@
          ]
       },
       {
-         "id":"service",
+         "id":"/beer/service",
          "dependencies":[
             "/beer/database"
          ],
