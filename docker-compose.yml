@@ -1,0 +1,14 @@
+version: '2'
+services:
+
+  service:
+    image: unterstein/dcos-beer-service:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/beer?user=good&password=beer
+
+  database:
+    image: unterstein/dcos-beer-database:latest
