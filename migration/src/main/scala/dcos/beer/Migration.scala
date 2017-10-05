@@ -62,16 +62,12 @@ object Migration extends App {
   )
   println("finished styles")
 
-  neo4jSession.run("CREATE" +
-      "INDEX ON :Beer(id)," +
-      "INDEX ON :Beer(name)," +
-      "INDEX ON :Brewery(id)," +
-      "INDEX ON :Brewery(name)," +
-      "INDEX ON :Category(id)," +
-      "INDEX ON :Style(id)"
-  )
-
-  neo4jSession.run("schema await")
+  neo4jSession.run("CREATE INDEX ON :Beer(id)")
+  neo4jSession.run("CREATE INDEX ON :Beer(name)")
+  neo4jSession.run("CREATE INDEX ON :Brewery(id)")
+  neo4jSession.run("CREATE INDEX ON :Brewery(name)")
+  neo4jSession.run("CREATE INDEX ON :Category(id)")
+  neo4jSession.run("CREATE INDEX ON :Style(id)")
 
   // create relations
   neo4jSession.run("MATCH (beer: Beer), (brewery: Brewery) WHERE beer.brewery = brewery.id MERGE (brewery)-[:PRODUCES]->(beer);")

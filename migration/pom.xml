@@ -49,6 +49,14 @@
         </dependency>
     </dependencies>
 
+    <pluginRepositories>
+        <pluginRepository>
+            <id>mesosphere-repo</id>
+            <name>Mesosphere Repo</name>
+            <url>http://downloads.mesosphere.io/maven</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <build>
         <plugins>
             <plugin>
@@ -81,8 +89,8 @@
                 <artifactId>dcos-maven-plugin</artifactId>
                 <version>0.5</version>
                 <configuration>
-                    <dcosUrl>https://joerg-aja-elasticl-10m9r46esrku6-1483268829.us-west-2.elb.amazonaws.com</dcosUrl>
-                    <nexusUrl>34.212.126.213:29159</nexusUrl>
+                    <dcosUrl>https://javaone-elasticloa-1k51qnpq0nvak-1611145423.us-west-2.elb.amazonaws.com</dcosUrl>
+                    <nexusUrl>34.215.139.145:1413</nexusUrl>
                     <ignoreSslCertificate>true</ignoreSslCertificate>
                 </configuration>
             </plugin>
