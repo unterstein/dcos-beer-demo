@@ -70,14 +70,14 @@
             }
          },
          "env":{
-            "SPRING_DATASOURCE_URL":"jdbc:mysql://database.marathon.l4lb.thisdcos.directory:3306/beer?user=good&password=beer",
+            "SPRING_DATASOURCE_URL":"jdbc:mysql://database.marathon.l4lb.thisdcos.directory:3306/beer?user=good&password=beer"
          },
          "upgradeStrategy":{
             "minimumHealthCapacity":0.85,
             "maximumOverCapacity":0.15
          },
          "labels":{
-            "HAPROXY_0_VHOST":"xyz.eu-west-1.elb.amazonaws.com",
+            "HAPROXY_0_VHOST":"junterste-publicsl-1c8wupqv02hj-1927399223.us-west-2.elb.amazonaws.com",
             "HAPROXY_GROUP":"external"
          }
       }
