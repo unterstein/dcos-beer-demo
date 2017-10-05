@@ -43,13 +43,18 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
 
   @RequestMapping("/")
   public BeerResponse randomBeer(final Locale locale) {
-    Map<String, Object> query = template.queryForMap("SELECT * FROM `beers` WHERE description not NULL ORDER BY RAND() LIMIT 0,1;");
+    Map<String, Object> query = template.queryForMap(
+        "SELECT b.id, b.name, b.descript, s.style_name " +
+            "FROM `beers` b LEFT JOIN `styles` s " +
+            "ON b.style_id = s.id " +
+            "WHERE descript != '' " +
+            "ORDER BY RAND() LIMIT 0,1;");
 
     return new BeerResponse(
         hostAddress,
         query.get("name").toString(),
-        "",
-        query.get("description").toString()
+        query.get("style_name").toString(),
+        query.get("descript").toString()
     );
   }
 
