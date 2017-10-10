@@ -2,8 +2,18 @@
 
 You wonder how [Java](), [Spring Boot](https://spring.io), [MySQL](https://mysql.com), [Neo4J](https://neo4j.com), [Zeppelin](), [Apache Spark](), [Docker](), [Elasticsearch](https://elastic.co), [Docker]() and [DC/OS](https://dcos.io) fits in one demo? Well, we'll show you! This is a rather complex demo, so grab your favorit beer and enjoy 🍺
 
+## General problems of current data center layouts
+Current data center architectures are mostly static partitioned. Meaning, that you have different sub clusters for each part of your system. Let's say you have 30 nodes to host your system, then you would typically slice this 30 nodes into smaller parts and assign dedicated applications to dedicated nodes. This has a couple of disadvantages. You need to optimize each sub part of your cluster against load peaks and if nodes are crashing during those peaks, you are not able to shift dynamically applications to other nodes. On the other hand you are wasting a lot of resources.
+
+If we look at resource utilization in typical industry clusters, we see an average CPU utilization around 15% with this classic approach. But would'nt it be cool to be able to shift applications dynamically between nodes, be more flexible against failure and load peaks and increase the utilization to save money?
+
+![Motivation](images/motivation.png)
+
+In this demo we will see an increasing cluster utilization by operating the Java service architecture together with all data applications on the same DC/OS cluster.
+
 ## The domain
-In this demo we are all talking about beer. There is this old website [openbeerdb.com](https://openbeerdb.com) and they offer a quite old list of beer, brewery, beer categories and beer styles as downloadable sql databases. You can find this sql files and the related readme in `database/sql`. This database contains a list of around 1500 breweries and 6000 different beers with their relation to category and style. You can see the important properties in the model below:
+In this demo we are all talking about beer. There is this old website [openbeerdb.com](https://openbeerdb.com) and they offer a quite old list of beer, brewery, beer categories and beer styles as downloadable sql databases. But age doesn't matter for this demo, as long as you are old enough to drink.
+You can find this sql files and the related readme in `database/sql`. This database contains a list of around 1500 breweries and 6000 different beers with their relation to category and style. You can see the important properties in the model below:
 
 ![Model](images/or.png)
 
@@ -171,7 +181,12 @@ Last but not least we added configuration for rolling upgrades. During an upgrad
 ### 1.1 Deploy our system to DC/OS
 If you have the CLI installed, you can simply run `dcos marathon group add marathon-configuration.json` to install our group of applications. You can do this via the UI as well.
 
-In order to expose this application to the outside, you will need to install marathon-lb. Marathon-lb is a dynamic HAproxy which will automatically configure by the running applications in marathon. If you have an application with this HAPROXY-labels, marathon-lb will route traffic from the outside load balanced to the healthy running instances. You can install marathon-lb via the UI or via the CLI, simply run `dcos package install marathon-lb`.
+In order to expose this application to the outside, you will need to install marathon-lb. Marathon-lb is a dynamic HAproxy which will automatically configure by the running applications in marathon. If you have an application with this HAPROXY-labels, marathon-lb will route traffic from the outside load balanced to the healthy running instances. You can install marathon-lb via the UI or via the CLI, simply run `dcos package install marathon-lb`. 
+
+### Check utilization
+After this installation is finished, we should see a cluster utilization as shown below:
+
+![Utilization 1](images/resources1.png)
 
 ### 1.2 See it working
 If you point your browser to your public ip, you will get an answer like this:
@@ -220,6 +235,13 @@ If you go for a more text based result, you could run `MATCH (brewery: Brewery)-
 
 So, we see the germany like to produce and probably to drink `South German-Style Hefeweizen`. We could re-run this query with `WHERE brewery.country = "United States"`, but well...there is no good american beer anyways ;-).
 
+### Check utilization
+After installing Neo4j and running the migration, we should see a cluster utilization as shown below:
+
+![Utilization 2](images/resources2.png)
+
+You see, we increased the CPU utilization from 13% to 38% by running our data services together with our Java services.
+
 ## 4. Map/Reduce
 Imagine we would have a huge data set which fits not in memory, but we want to do analysis on this data. Let's use Map/Reduce to solve this issue.
 
@@ -246,6 +268,15 @@ In the third and last section, you can query the result of the reduce phase with
 
 You can see the occurences of `573 on hops`, `488 on malt`, `428 flavor`. Yummy, this are good words to describe beer! So if I would be a data analyst, I would try to find relations between those frequent words to optimize my own beer description.
 
+### Check utilization
+After installing Zeppelin and running our Map/Reduce job, we should see a cluster utilization as shown below:
+
+![Utilization 3](images/resources3.png)
+
+WOW! We increased the CPU utilization nearly to maximum to run our Spark job and went from initially 4 running tasks to 19. This is great 🎉
+
+If we want to continue, we need to give resources back to the cluster and de-install Zeppelin from the cluster. But this is no problem, because Mesos is all about using only currently needed resources and give it back afterwards.
+
 ## 5. Elasticsearch
-Ok, still not enough data applications installed? Good! I have one more thing for you! Let`s go back to the `Catalog` in the DC/OS UI or use the CLI to install the Elasticsearch package.
+Ok, still not enough data applications installed? Good! I have one more thing for you! Let's go back to the `Catalog` in the DC/OS UI or use the CLI to install the Elasticsearch package.
 
