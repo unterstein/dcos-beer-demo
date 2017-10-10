@@ -1,6 +1,6 @@
 # The DC/OS beer demo
 
-You wonder how [Java](), [Spring Boot](https://spring.io), [MySQL](https://mysql.com), [Neo4J](https://neo4j.com), [Zeppelin](), [Spark](), [Spark](), [Elasticsearch](https://elastic.co), [Docker]() and [DC/OS](https://dcos.io) fits in one demo? Well, we'll show you! This is a rather complex demo, so grab your favorit beer and enjoy 🍺
+You wonder how [Java](), [Spring Boot](https://spring.io), [MySQL](https://mysql.com), [Neo4J](https://neo4j.com), [Zeppelin](), [Apache Spark](), [Docker](), [Elasticsearch](https://elastic.co), [Docker]() and [DC/OS](https://dcos.io) fits in one demo? Well, we'll show you! This is a rather complex demo, so grab your favorit beer and enjoy 🍺
 
 ## The domain
 In this demo we are all talking about beer. There is this old website [openbeerdb.com](https://openbeerdb.com) and they offer a quite old list of beer, brewery, beer categories and beer styles as downloadable sql databases. You can find this sql files and the related readme in `database/sql`. This database contains a list of around 1500 breweries and 6000 different beers with their relation to category and style. You can see the important properties in the model below:
@@ -13,7 +13,7 @@ Ok, now you know the domain: Let's talk about our story!
 1. In this demo we want to build a simple Spring Boot service first which offers us a random beer of the day via HTTP API. To service this purpose, you can find a spring  boot web application in the `service` folder. We see all the application lifecycle steps here from deploy over scale to break, update and recover.
 2. After we successfully implemented our service using the openbeerdb data, we want to do more analysis. For this reason we are using the Neo4j graph database. You can find the data migration implementation in the `migration` folder. 
 3. Using the power of a graph database, we can do fancy queries like `List all styles of beers produced in a certain and show many breweries produce it there` without the hassle of complicated joins.
-4. After we did complex analysis in a graph database, we want to do mass analysis using a map/reduce job in Spark. Therefore you can find a Zeppelin notepad in the file `zeppelin-analysis.json` containing a map/reduce job to count all the words in beer descriptions to give an overview of what words are used in a beer description.
+4. After we did complex analysis in a graph database, we want to do mass analysis using a Map/Reduce job in Spark. Therefore you can find a Zeppelin notepad in the file `zeppelin-analysis.json` containing a Map/Reduce job to count all the words in beer descriptions to give an overview of what words are used in a beer description.
 5. Last but not least we will see how use Elasticsearch to back our service architecture with a centralized logging system.
 
 ## 0. Docker
@@ -205,7 +205,7 @@ To install a proper Neo4j [causal cluster](https://neo4j.com/docs/operations-man
 In order to migrate the database from Mysql to Neo4j, we need to run a migration. In DC/OS we have the possibility to run one time or scheduled jobs in the jobs section. Simply run `dcos job add migration-configuration.json` (TODO ADD) to add the job and `dcos job run migration` to execute it once.
 
 
-### 2.3 Access your data
+## 3. Query connected data
 After the job finished execution, we can see the result of our enriched and connected data. If you point your browser to https://publicIp:7474, you login to Neo4j with the default credentials `neo4j:dcos`. The graph model looks like this:
 
 ![Graph model](images/graph.png)
@@ -219,4 +219,31 @@ If you go for a more text based result, you could run `MATCH (brewery: Brewery)-
 ![Query 2](images/query2.png)
 
 So, we see the germany like to produce and probably to drink `South German-Style Hefeweizen`. We could re-run this query with `WHERE brewery.country = "United States"`, but well...there is no good american beer anyways ;-).
+
+## 4. Map/Reduce
+Imagine we would have a huge data set which fits not in memory, but we want to do analysis on this data. Let's use Map/Reduce to solve this issue.
+
+### 4.1 Install Zeppelin
+First we need to install zeppelin, simply run `dcos package install zeppelin`. Zeppelin is a web notepage, where you can post scala code to a big text input field. When you hit the compile button, this scala code will be compiled and executed a proper Spark cluster.
+
+### 4.2 Do analysis
+If you go the the DC/OS UI in the service section and hover the zeppelin application, you will see a link to an external application. Follow this link to Zeppelin UI. On the left handside you will see an option to upload a notebook, please upload the `zeppelin-analysis.json` file. When you now open the notebook, you will see a pre-defined Spark job. 
+
+![Zeppelin](images/query2.png) TODO ADD
+
+In the first section, you can see our declared dependencies. We want to import SQL data, therefore we import our MySQL connector.
+
+In the second section, you see the actual job. First we create a connection, this time we are using IP based VIP discovery.
+Then we are concurrenty querying for overall 5.000 beers, then filtering noise and splitting it to a single sequence of words. Then we are doing basic word count algorithm.
+
+In the map phase we are transforming each single word to a tuple of (word, 1). For example the word `beer` would be transformed to `(beer, 1)`. This can be done highly in parallel.
+
+In the reduce phase we are transforming each tuple with the same key to a new tuple, but the sum of the values. For example `(beer, 1)` and `(beer, 1)` would be transformed to `(beer, 2)`. This can also be done highly in parallel.
+
+In the third and last section, you can query the result of the reduce phase with a SQL-like language. In this example we are selecting the word ordered by the occurence descending:
+
+![Word count result](images/query2.png) TODO ADD
+
+You can see the occurences of `x`, `y`, `z`. Yummy, this are good words to describe beer! So if I would be a data analyst, I would try to find relations between those frequent words to optimize my beer description.
+
 
