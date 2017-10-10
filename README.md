@@ -275,7 +275,7 @@ After installing Zeppelin and running our Map/Reduce job, we should see a cluste
 
 WOW! We increased the CPU utilization nearly to maximum to run our Spark job and went from initially 4 running tasks to 19. This is great 🎉
 
-If we want to continue, we need to give resources back to the cluster and de-install Zeppelin from the cluster. But this is no problem, because Mesos is all about using only currently needed resources and give it back afterwards.
+If we want to continue in this demo and install Elasticsearch, we need to give resources back to the cluster and de-install Zeppelin. But this is no problem, because Mesos is all about using only currently needed resources and give it back afterwards.
 
 ## 5. Elasticsearch
 Ok, still not enough data applications installed? Good! I have one more thing for you! Let's go back to the `Catalog` in the DC/OS UI or use the CLI to install the Elasticsearch package.
