@@ -8,6 +8,7 @@ services:
     depends_on:
       - database
     environment:
+      - SERVICE_VERSION=2
       - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/beer?user=good&password=beer
 
   database:

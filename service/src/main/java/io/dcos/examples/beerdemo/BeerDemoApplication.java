@@ -2,6 +2,7 @@ package io.dcos.examples.beerdemo;
 
 import io.dcos.examples.beerdemo.api.BeerResponse;
 import io.dcos.examples.beerdemo.api.HealthResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -24,6 +25,10 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
 
   // stores the host address on which this service runs
   private final String hostAddress;
+
+  // stores the application version of this service
+  @Value("${SERVICE_VERSION:1}")
+  private String version;
 
   // stores the information if this service should be return healthy or unhealthy
   private boolean sober = true;
@@ -52,6 +57,7 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
 
     return new BeerResponse(
         hostAddress,
+        version,
         "" + query.get("name"),
         "" + query.get("style_name"),
         query.get("descript").toString()
