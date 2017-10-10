@@ -18,7 +18,7 @@ Ok, now you know the domain: Let's talk about our story!
 
 ## 0. Docker
 We are using Docker in this demo to package most parts of our system. This is important because we want to run exactly the same code in development, stage and production. We just want to change the environment specific configuration for each of those stages. 
-You can find the Dockerfiles in the `database` and `service` folders. Both images are rather simple and starting with a official base image of `mysql` or `java` and just adding the initial sql files or the application jar file.
+You can find the Docker files in the `database` and `service` folders. Both images are rather simple and starting with a official base image of `mysql` or `java` and just adding the initial sql files or the application jar file.
 
 Our docker compose configuration looks like this:
 
@@ -166,7 +166,7 @@ Our java application has a dependency to the database, so it is deployed after t
 The health check describes that the `/application/health` endpoint will be checked every 2 seconds after an initial grace period of 10 seconds if it returns a `HTTP 2xx`. If this check will fail 10 times in a row, this service will be replaced with another one.
 To expose our application to the outside, we need to add a network configuration. Because we added a `labels` section for our HAproxy later in the configuration, we can use a random host port in this section.
 To connect this java service to the database, we need to adjust the environment variables. In this example we are using the named based VIP pattern, so we need to use this discovery name `database.marathon.l4lb.thisdcos.directory`, see [docs](https://docs.mesosphere.com/1.10/usage/service-discovery/dns-overview/) for more information.
-Last but not least we added configuration for rolling upgrades. During an upgrade, we want a maximum overcapacity of 15% and a minimum health capacity of 85%. Image you have 20 services running, a rolling upgrade would be like `start 3 new ones, wait to become healthy and then stop old ones`. If you don't like rolling upgrades, you can use blue/green or canary upgrades as well, see [docs](TODO) for more information.
+Last but not least we added configuration for rolling upgrades. During an upgrade, we want a maximum overcapacity of 15% and a minimum health capacity of 85%. Image you have running 20 services, a rolling upgrade would be like `start 3 new ones, wait to become healthy and then stop old ones`. If you don't like rolling upgrades, you can use blue/green or canary upgrades as well, see [docs](TODO) for more information.
 
 ### 1.1 Deploy our system to DC/OS
 If you have the CLI installed, you can simply run `dcos marathon group add marathon-configuration.json` to install our group of applications. You can do this via the UI as well.
@@ -188,7 +188,7 @@ If you point your browser to your public ip, you will get an answer like this:
 
 Well, sounds like a decend lager! You can't argue that the germans are verbose ;-).
 
-### 1.3 Scale
+### 1.3 Scale it
 Now we installed the application, we want to scale it. Simply run `dcos marathon update /beer/service instances=20`. This will change the property `instances` to 20 and start a deployment to reach this target instance count. If your cluster does not carry enough resources, a scale to 5 is also fine.
 
 ### 1.4 Break it
@@ -196,4 +196,27 @@ Ok, let's break it! Remember that we talked about health checks and that you can
 
 ### 1.5 Update it
 Mostly every configuration change will trigger a deployment. Usually you would use a new docker version or change endpoints or something similar. In this example we will update our environment variable `VERSION`. Simply go to the UI and navigate to the java service and the environment section. You can change the configuration from 3 to 4 here. When you hit the save button, you will trigger a rolling deployment. When you now constantly refresh your browser tab with the beer of the day responses, you will see that sometimes you will get a `"version": "3"` and sometimes a `"version": "4"`.
+
+## 2. Extract rich data to Neo4j
+### 2.1 Install Neo4j
+To install a proper Neo4j [causal cluster](https://neo4j.com/docs/operations-manual/current/monitoring/causal-cluster/#dbms.cluster.overview), simply run `dcos package install neo4j`. This will install a Neo4j cluster of 3 Neo4j core nodes. If you want to access your Neo4j cluster from the outside of your DC/OS cluster, you will need to install the `neo4j-proxy` package additionally. DC/OS is designed to run applications internally on private nodes by default.
+
+### 2.2 The migration job
+In order to migrate the database from Mysql to Neo4j, we need to run a migration. In DC/OS we have the possibility to run one time or scheduled jobs in the jobs section. Simply run `dcos job add migration-configuration.json` (TODO ADD) to add the job and `dcos job run migration` to execute it once.
+
+
+### 2.3 Access your data
+After the job finished execution, we can see the result of our enriched and connected data. If you point your browser to https://publicIp:7474, you login to Neo4j with the default credentials `neo4j:dcos`. The graph model looks like this:
+
+![Graph model](images/graph.png)
+
+The special thing about graphs are, that hops between nodes are native database concepts and way cheaper than joins in relation databases. In Neo4j you can query patterns of node-relation combination. For example a query like this `MATCH (brewery: Brewery)-[*1..2]->(style: Style) WHERE brewery.country = "Germany" WITH style, count(*) as c RETURN style, c;` would return all breweries from germany which has a relation over maximum 2 hops to a style of beer. If you pick one of the resulting nodes and double click to expand relations, you might be lucky and get a result like this:
+
+![Query 1](images/query1.png)
+
+If you go for a more text based result, you could run `MATCH (brewery: Brewery)-[:PRODUCES]->(beer: Beer)-[:HAS_STYLE]->(style: Style) WHERE brewery.country = "Germany" WITH style, count(beer) as c ORDER BY c DESC RETURN style.name, c;` and get the following result:
+
+![Query 2](images/query2.png)
+
+So, we see the germany like to produce and probably to drink `South German-Style Hefeweizen`. We could re-run this query with `WHERE brewery.country = "United States"`, but well...there is no good american beer anyways ;-).
 
