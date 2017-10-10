@@ -178,7 +178,7 @@ If you point your browser to your public ip, you will get an answer like this:
 
 ```
 {
-    "hostAddress": "10.0.3.9",
+    "hostAddress": "172.17.0.2",
     "version": "3",
     "beerName": "Millennium Lager",
     "beerStyle": "German-Style Pilsener",
@@ -229,7 +229,7 @@ First we need to install zeppelin, simply run `dcos package install zeppelin`. Z
 ### 4.2 Do the analytics
 If you go the the DC/OS UI in the service section and hover the zeppelin application, you will see a link to an external application. Follow this link to Zeppelin UI. On the left handside you will see an option to upload a notebook, please upload the `zeppelin-analysis.json` file. When you now open the notebook, you will see a pre-defined Spark job. 
 
-![Zeppelin](images/query2.png) TODO ADD
+![Zeppelin](images/zeppelin1.png)
 
 In the first section, you can see our declared dependencies. We want to import SQL data, therefore we import our MySQL connector.
 
@@ -242,9 +242,9 @@ In the reduce phase we are transforming each tuple with the same key to a new tu
 
 In the third and last section, you can query the result of the reduce phase with a SQL-like language. In this example we are selecting the word ordered by the occurence descending:
 
-![Word count result](images/query2.png) TODO ADD
+![Word count result](images/zeppelin2.png) TODO ADD
 
-You can see the occurences of `x`, `y`, `z`. Yummy, this are good words to describe beer! So if I would be a data analyst, I would try to find relations between those frequent words to optimize my beer description.
+You can see the occurences of `573 on hops`, `488 on malt`, `428 flavor`. Yummy, this are good words to describe beer! So if I would be a data analyst, I would try to find relations between those frequent words to optimize my own beer description.
 
 ## 5. Elasticsearch
 Ok, still not enough data applications installed? Good! I have one more thing for you! Let`s go back to the `Catalog` in the DC/OS UI or use the CLI to install the Elasticsearch package.
