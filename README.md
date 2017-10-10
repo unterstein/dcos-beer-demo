@@ -226,7 +226,7 @@ Imagine we would have a huge data set which fits not in memory, but we want to d
 ### 4.1 Install Zeppelin
 First we need to install zeppelin, simply run `dcos package install zeppelin`. Zeppelin is a web notepage, where you can post scala code to a big text input field. When you hit the compile button, this scala code will be compiled and executed a proper Spark cluster.
 
-### 4.2 Do analysis
+### 4.2 Do the analytics
 If you go the the DC/OS UI in the service section and hover the zeppelin application, you will see a link to an external application. Follow this link to Zeppelin UI. On the left handside you will see an option to upload a notebook, please upload the `zeppelin-analysis.json` file. When you now open the notebook, you will see a pre-defined Spark job. 
 
 ![Zeppelin](images/query2.png) TODO ADD
@@ -246,4 +246,6 @@ In the third and last section, you can query the result of the reduce phase with
 
 You can see the occurences of `x`, `y`, `z`. Yummy, this are good words to describe beer! So if I would be a data analyst, I would try to find relations between those frequent words to optimize my beer description.
 
+## 5. Elasticsearch
+Ok, still not enough data applications installed? Good! I have one more thing for you! Let`s go back to the `Catalog` in the DC/OS UI or use the CLI to install the Elasticsearch package.
 
