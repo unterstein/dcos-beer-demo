@@ -1,6 +1,6 @@
 # The DC/OS beer demo
 
-You wonder how [Java](), [Spring Boot](https://spring.io), [MySQL](https://mysql.com), [Neo4J](https://neo4j.com), [Zeppelin](), [Apache Spark](), [Docker](), [Elasticsearch](https://elastic.co), [Docker]() and [DC/OS](https://dcos.io) fits in one demo? Well, we'll show you! This is a rather complex demo, so grab your favorit beer and enjoy 🍺
+You wonder how [Java](http://www.oracle.com/technetwork/java/index.html), [Spring Boot](https://projects.spring.io/spring-boot/), [MySQL](https://www.mysql.com), [Neo4J](https://neo4j.com), [Zeppelin](), [Apache Spark](https://spark.apache.org/), [Elasticsearch](https://www.elastic.co), [Docker](https://www.docker.com) and [DC/OS](https://dcos.io) fits in one demo? Well, we'll show you! This is a rather complex demo, so grab your favorit beer and enjoy 🍺
 
 ## General problems of current data center layouts
 Current data center architectures are mostly static partitioned. Meaning, that you have different sub clusters for each part of your system. Let's say you have 30 nodes to host your system, then you would typically slice this 30 nodes into smaller parts and assign dedicated applications to dedicated nodes. This has a couple of disadvantages. You need to optimize each sub part of your cluster against load peaks and if nodes are crashing during those peaks, you are not able to shift dynamically applications to other nodes. On the other hand you are wasting a lot of resources.
@@ -176,7 +176,7 @@ Our java application has a dependency to the database, so it is deployed after t
 The health check describes that the `/application/health` endpoint will be checked every 2 seconds after an initial grace period of 10 seconds if it returns a `HTTP 2xx`. If this check will fail 10 times in a row, this service will be replaced with another one.
 To expose our application to the outside, we need to add a network configuration. Because we added a `labels` section for our HAproxy later in the configuration, we can use a random host port in this section.
 To connect this java service to the database, we need to adjust the environment variables. In this example we are using the named based VIP pattern, so we need to use this discovery name `database.marathon.l4lb.thisdcos.directory`, see [docs](https://docs.mesosphere.com/1.10/usage/service-discovery/dns-overview/) for more information.
-Last but not least we added configuration for rolling upgrades. During an upgrade, we want a maximum overcapacity of 15% and a minimum health capacity of 85%. Image you have running 20 services, a rolling upgrade would be like `start 3 new ones, wait to become healthy and then stop old ones`. If you don't like rolling upgrades, you can use blue/green or canary upgrades as well, see [docs](TODO) for more information.
+Last but not least we added configuration for rolling upgrades. During an upgrade, we want a maximum overcapacity of 15% and a minimum health capacity of 85%. Image you have running 20 services, a rolling upgrade would be like `start 3 new ones, wait to become healthy and then stop old ones`. If you don't like rolling upgrades, you can use blue/green or canary upgrades as well, see [docs](https://docs.mesosphere.com/1.8/usage/service-discovery/load-balancing-vips/) for more information.
 
 ### 1.1 Deploy our system to DC/OS
 If you have the CLI installed, you can simply run `dcos marathon group add marathon-configuration.json` to install our group of applications. You can do this via the UI as well.
@@ -214,7 +214,7 @@ Mostly every configuration change will trigger a deployment. Usually you would u
 
 ## 2. Extract rich data to Neo4j
 ### 2.1 Install Neo4j
-To install a proper Neo4j [causal cluster](https://neo4j.com/docs/operations-manual/current/monitoring/causal-cluster/#dbms.cluster.overview), simply run `dcos package install neo4j`. This will install a Neo4j cluster of 3 Neo4j core nodes. If you want to access your Neo4j cluster from the outside of your DC/OS cluster, you will need to install the `neo4j-proxy` package additionally. DC/OS is designed to run applications internally on private nodes by default.
+To install a proper Neo4j [causal cluster](http://neo4j.com/docs/operations-manual/current/clustering/causal-clustering/), simply run `dcos package install neo4j`. This will install a Neo4j cluster of 3 Neo4j core nodes. If you want to access your Neo4j cluster from the outside of your DC/OS cluster, you will need to install the `neo4j-proxy` package additionally. DC/OS is designed to run applications internally on private nodes by default.
 
 ### 2.2 The migration job
 In order to migrate the database from Mysql to Neo4j, we need to run a migration. In DC/OS we have the possibility to run one time or scheduled jobs in the jobs section. Simply run `dcos job add migration-configuration.json` (TODO ADD) to add the job and `dcos job run migration` to execute it once.
@@ -264,7 +264,7 @@ In the reduce phase we are transforming each tuple with the same key to a new tu
 
 In the third and last section, you can query the result of the reduce phase with a SQL-like language. In this example we are selecting the word ordered by the occurence descending:
 
-![Word count result](images/zeppelin2.png) TODO ADD
+![Word count result](images/zeppelin2.png)
 
 You can see the occurences of `573 on hops`, `488 on malt`, `428 flavor`. Yummy, this are good words to describe beer! So if I would be a data analyst, I would try to find relations between those frequent words to optimize my own beer description.
 
