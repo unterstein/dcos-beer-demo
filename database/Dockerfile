@@ -7,4 +7,4 @@ ENV MYSQL_DATABASE=beer \
 	MYSQL_PASSWORD=beer \
     MYSQL_RANDOM_ROOT_PASSWORD=yes
 
-ADD *.sql /docker-entrypoint-initdb.d/
+ADD sql/*.sql /docker-entrypoint-initdb.d/
