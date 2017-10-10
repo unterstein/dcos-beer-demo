@@ -15,3 +15,30 @@ Ok, now you know the domain: Let's talk about our story!
 3. Using the power of a graph database, we can do fancy queries like `List all styles of beers produced in a certain and show many breweries produce it there` without the hassle of complicated joins.
 4. After we did complex analysis in a graph database, we want to do mass analysis using a map/reduce job in Spark. Therefore you can find a Zeppelin notepad in the file `zeppelin-analysis.json` containing a map/reduce job to count all the words in beer descriptions to give an overview of what words are used in a beer description.
 5. Last but not least we will see how use Elasticsearch to back our service architecture with a centralized logging system.
+
+## 0. Docker
+We are using Docker in this demo to package most parts of our system. This is important because we want to run exactly the same code in development, stage and production. We just want to change the environment specific configuration for each of those stages. 
+You can find the Dockerfiles in the `database` and `service` folders. Both images are rather simple and starting with a official base image of `mysql` or `java` and just adding the initial sql files or the application jar file.
+
+Our docker compose configuration looks like this:
+
+```
+version: '2'
+services:
+
+  database:
+    image: unterstein/dcos-beer-database:latest
+
+  service:
+    image: unterstein/dcos-beer-service:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    environment:
+      - SERVICE_VERSION=2
+      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/beer?user=good&password=beer
+```
+
+You can see a database without configuration in the first section. In the second section you can see the configured java service. The service depends on the database and has environment specific configuration for it's version and the database connectivity.
+
