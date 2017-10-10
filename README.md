@@ -42,3 +42,26 @@ services:
 
 You can see a database without configuration in the first section. In the second section you can see the configured java service. The service depends on the database and has environment specific configuration for it's version and the database connectivity.
 
+## 1. The Spring Boot service
+This service basically has three endpoints.
+
+1. `GET /` delivers the beer of the day
+2. `GET /application/health` will respond with a `HTTP 200` as long as the internal state indicates a healthy system. This endpoint will return a `HTTP 500` otherwise. The service is healthy by default.
+3. `DELETE /health` You can switch the internal state of the service to unhealthy when calling this endpoint.
+
+If you point your browser to `$dockerIp:8080`, you will get the following answer:
+
+```
+{
+    "hostAddress": "172.23.0.3",
+    "version": "2",
+    "beerName": "Wicked Ale",
+    "beerStyle": "American-Style Brown Ale",
+    "beerDescription": "Pete's Wicked Ale is an experience out of the ordinary. Our tantalizing ruby-brown ale with distinctive malts and aromatic Brewers Gold hops is sure to stir up an urge to get loose."
+}
+```
+
+You find the properties `hostAddress` and `version` which are for demoing purpose and we will se them later when using DC/OS to scale and update our application. When we scale out our service, we will see load-balanced responses and when we update our application, we will see rolling upgrades.
+
+You also find the name of our beer of the day, the style of the beer and a description. This beer description sounds really tasty!
+
