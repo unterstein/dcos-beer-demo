@@ -70,6 +70,7 @@
             }
          },
          "env":{
+            "VERSION": "3",
             "SPRING_DATASOURCE_URL":"jdbc:mysql://database.marathon.l4lb.thisdcos.directory:3306/beer?user=good&password=beer"
          },
          "upgradeStrategy":{
