@@ -12,8 +12,8 @@ If we look at resource utilization in typical industry clusters, we see an avera
 In this demo we will see an increasing cluster utilization by operating the Java service architecture together with all data applications on the same DC/OS cluster.
 
 ## The domain
-In this demo we are all talking about beer. There is this old website [openbeerdb.com](https://openbeerdb.com) and they offer a quite old list of beer, brewery, beer categories and beer styles as downloadable sql databases. But age doesn't matter for this demo, as long as you are old enough to drink.
-You can find this sql files and the related readme in `database/sql`. This database contains a list of around 1500 breweries and 6000 different beers with their relation to category and style. You can see the important properties in the model below:
+In this demo we are talking all about beer. There is this old website [openbeerdb.com](https://openbeerdb.com) and they offer a quite old list of beer, breweries, beer categories and beer styles as downloadable sql files. But age doesn't matter for this demo, as long as you are old enough to drink.
+You can find this sql files and the related readme in the `database/sql` folder. This database contains a list of around 1500 breweries and 6000 different beers with their relation to category and style. You can see the model and important properties in the diagram below:
 
 ![Model](images/or.png)
 
@@ -21,7 +21,7 @@ You can find this sql files and the related readme in `database/sql`. This datab
 Ok, now you know the domain: Let's talk about our story! 
 
 1. In this demo we want to build a simple Spring Boot service first which offers us a random beer of the day via HTTP API. To service this purpose, you can find a spring  boot web application in the `service` folder. We see all the application lifecycle steps here from deploy over scale to break, update and recover.
-2. After we successfully implemented our service using the openbeerdb data, we want to do more analysis. For this reason we are using the Neo4j graph database. You can find the data migration implementation in the `migration` folder. 
+2. After we successfully implemented our service using the openbeerdb data, we want to do more analysis. For this reason we are using the Neo4j graph database. You can find the data migration implementation in the `neo4j-migration` folder. 
 3. Using the power of a graph database, we can do fancy queries like `List all styles of beers produced in a certain and show many breweries produce it there` without the hassle of complicated joins.
 4. After we did complex analysis in a graph database, we want to do mass analysis using a Map/Reduce job in Spark. Therefore you can find a Zeppelin notepad in the file `zeppelin-analysis.json` containing a Map/Reduce job to count all the words in beer descriptions to give an overview of what words are used in a beer description.
 5. Last but not least we will see how use Elasticsearch to back our service architecture with a centralized logging system.
