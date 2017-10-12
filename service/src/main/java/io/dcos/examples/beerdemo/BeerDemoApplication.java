@@ -18,6 +18,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 @SpringBootApplication
 @RestController("/")
@@ -29,6 +30,8 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
   // stores the application version of this service
   @Value("${SERVICE_VERSION:1}")
   private String version;
+
+  private String uuid = UUID.randomUUID().toString().replace("-", "");
 
   // stores the information if this service should be return healthy or unhealthy
   private boolean sober = true;
@@ -57,6 +60,7 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
 
     return new BeerResponse(
         hostAddress,
+        uuid,
         version,
         "" + query.get("name"),
         "" + query.get("style_name"),
