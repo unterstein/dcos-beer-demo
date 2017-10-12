@@ -13,3 +13,20 @@ services:
 
   database:
     image: unterstein/dcos-beer-database:latest
+
+  kibana:
+    image: kibana:5.5.2
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+
+  elasticsearch:
+    image: elasticsearch:5.5.2
+    volumes:
+      - /usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
