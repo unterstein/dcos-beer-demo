@@ -2,5 +2,5 @@
 
 cd $(dirname $0)
 
-mvn clean install
+mvn clean install -DskipTests
 docker build --tag unterstein/dcos-beer-service:latest .

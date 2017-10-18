@@ -2,6 +2,7 @@ package io.dcos.examples.beerdemo;
 
 import io.dcos.examples.beerdemo.api.BeerResponse;
 import io.dcos.examples.beerdemo.api.HealthResponse;
+import org.apache.log4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.health.Health;
@@ -41,8 +42,8 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
   public BeerDemoApplication(final JdbcTemplate jdbcTemplate) {
     this.template = jdbcTemplate;
     hostAddress = getHostAddress();
+    initMDC();
   }
-
 
   @Bean
   public HealthIndicator chucksHealthIndicator() {
@@ -85,5 +86,11 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
     } catch (UnknownHostException e) {
       return "unknown";
     }
+  }
+
+  private void initMDC() {
+    MDC.put("uuid", uuid);
+    MDC.put("version", version);
+    MDC.put("host", hostAddress);
   }
 }

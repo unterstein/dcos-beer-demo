@@ -1,5 +1,7 @@
 version: '2'
 services:
+  database:
+    image: unterstein/dcos-beer-database:latest
 
   service:
     image: unterstein/dcos-beer-service:latest
@@ -7,19 +9,11 @@ services:
       - "8080:8080"
     depends_on:
       - database
+      - logstash
     environment:
       - SERVICE_VERSION=2
       - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/beer?user=good&password=beer
-
-  database:
-    image: unterstein/dcos-beer-database:latest
-
-  kibana:
-    image: kibana:5.5.2
-    ports:
-      - "5601:5601"
-    environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - LOGSTASH_DESTINATION=logstash:5000
 
   elasticsearch:
     image: elasticsearch:5.5.2
@@ -27,6 +21,20 @@ services:
       - /usr/share/elasticsearch/data
     ports:
       - "9200:9200"
-      - "9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+
+  logstash:
+    image: logstash:5.5.2
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    command: "-e 'input { tcp { port => 5000 } } output { elasticsearch { hosts => \"http://elasticsearch:9200\" } }'"
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:5.5.2
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
