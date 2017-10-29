@@ -11,6 +11,19 @@ If we look at resource utilization in typical industry clusters, we see an avera
 
 In this demo we will see an increasing cluster utilization by operating the Java service architecture together with all data applications on the same DC/OS cluster.
 
+## Operating data applications in a containerized world
+Orchestrating stateless applications in a containerized world is fairly simple. If you need to scale up or down, you just start or stop applications. If an application terminates, you can just restart it somewhere else. But what about operating data applications, like a traditional database or a distributed one? I would bet that you care about your data and where a replacement application is started for example.
+
+In general we do have three different kind of applications currently.
+
+![Storage options](images/storage.png)
+
+1. We have stateless applications, like `nginx`, `spring boot` or `node` applications. They usually don't hold business relevant data, so we usually don't care where replacement applications are scheduled or if we get the data back if an application crashes. For sure, this kind of applications is producing logs, but we will take care of those seperately. In Mesos it is possible to configure a default sandbox for those applications. You can use local disk, but if the container crashes, this data is gone.
+
+2. We have statefull applications, traditional databases without cluster support, for example `MySQL`. They hold business relevant data and we usually care a lot what happens with this data if an application crashes. By the fact that those kind don't support replication on their own, the only chance to save our data are backups and external storage. If you really want to have a smooth fail-over strategy, you would usually pick an external storage option for those kind of tasks. This option has poor performance for write requests, but survives node failures. In Mesos it is possible to consume external storage, such as Amazon EBS.
+
+3. But what if you are operating a database which was designed for distributed systems, like `Elasticsearch`, `Cassandra` or similar data stores? They hold business relevant data, but they are able to provide a replication layer within the database. Therefore it would be wasted performance if we would use a distributed storage layer, if our application is able to solve this problem. In Mesos it is possible to use local persistent volumes. With this feature it is possible to label a dedicated space on the local disk and if the application terminates, the replacement application can be re-scheduled to the exact same data again. It doesn't matter, if the application crashed because of an error, or if this was a planned maintenance or update. The already used data can be re-used and the application can decide if it wants to re-use the data and only replicate the last minutes or if a full replication is needed.
+
 ## The domain
 In this demo we are talking all about beer. There is this old website [openbeerdb.com](https://openbeerdb.com) and they offer a quite old list of beer, breweries, beer categories and beer styles as downloadable sql files. But age doesn't matter for this demo, as long as you are old enough to drink.
 You can find this sql files and the related readme in the `database/sql` folder. This database contains a list of around 1500 breweries and 6000 different beers with their relation to category and style. You can see the model and important properties in the diagram below:
@@ -35,7 +48,6 @@ Our docker compose configuration looks like this:
 ```
 version: '2'
 services:
-
   database:
     image: unterstein/dcos-beer-database:latest
 
@@ -45,12 +57,39 @@ services:
       - "8080:8080"
     depends_on:
       - database
+      - logstash
     environment:
       - SERVICE_VERSION=2
       - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/beer?user=good&password=beer
+      - LOGSTASH_DESTINATION=logstash:5000
+
+  elasticsearch:
+    image: elasticsearch:5.5.2
+    volumes:
+      - /usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+
+  logstash:
+    image: logstash:5.5.2
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    command: "-e 'input { tcp { port => 5000 } } output { elasticsearch { hosts => \"http://elasticsearch:9200\" } }'"
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:5.5.2
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+
 ```
 
-You can see a database without configuration in the first section. In the second section you can see the configured java service. The service depends on the database and has environment specific configuration for it's version and the database connectivity.
+You can see a database without configuration in the first section. In the second section you can see the configured java service. The service depends on the database and has environment specific configuration for it's version and the database connectivity. Furthermore the ELK stack is configured.
 
 ## 1. The Spring Boot service
 This service basically has three endpoints.
