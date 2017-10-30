@@ -251,15 +251,18 @@ Ok, let's break it! Remember that we talked about health checks and that you can
 ### 1.5 Update it
 Mostly every configuration change will trigger a deployment. Usually you would use a new docker version or change endpoints or something similar. In this example we will update our environment variable `VERSION`. Simply go to the UI and navigate to the java service and the environment section. You can change the configuration from 3 to 4 here. When you hit the save button, you will trigger a rolling deployment. When you now constantly refresh your browser tab with the beer of the day responses, you will see that sometimes you will get a `"version": "3"` and sometimes a `"version": "4"`.
 
-## 2. Extract rich data to Neo4j
-### 2.1 Install Neo4j
+## 2. Check Elasticsearch for logging synchronization
+TODO
+
+## 3. Extract rich data to Neo4j
+### 3.1 Install Neo4j
 To install a proper Neo4j [causal cluster](http://neo4j.com/docs/operations-manual/current/clustering/causal-clustering/), simply run `dcos package install neo4j`. This will install a Neo4j cluster of 3 Neo4j core nodes. If you want to access your Neo4j cluster from the outside of your DC/OS cluster, you will need to install the `neo4j-proxy` package additionally. DC/OS is designed to run applications internally on private nodes by default.
 
-### 2.2 The migration job
-In order to migrate the database from Mysql to Neo4j, we need to run a migration. In DC/OS we have the possibility to run one time or scheduled jobs in the jobs section. Simply run `dcos job add migration-configuration.json` (TODO ADD) to add the job and `dcos job run migration` to execute it once.
+### 3.2 The migration job
+In order to migrate the database from Mysql to Neo4j, we need to run a migration. In DC/OS we have the possibility to run one time or scheduled jobs in the jobs section. Simply go to the `neo4j-migration` and run `dcos job add job-configuration.json` (TODO ADD) to add the job and `dcos job run migration` to execute it once.
 
 
-## 3. Query connected data
+## 4. Query connected data
 After the job finished execution, we can see the result of our enriched and connected data. If you point your browser to https://publicIp:7474, you login to Neo4j with the default credentials `neo4j:dcos`. The graph model looks like this:
 
 ![Graph model](images/graph.png)
@@ -279,15 +282,15 @@ After installing Neo4j and running the migration, we should see a cluster utiliz
 
 ![Utilization 2](images/resources2.png)
 
-You see, we increased the CPU utilization from 13% to 38% by running our data services together with our Java services.
+You see, we increased the CPU utilization from 27% to 52% by running our data services together with our Java services.
 
-## 4. Map/Reduce
+## 5. Map/Reduce
 Imagine we would have a huge data set which fits not in memory, but we want to do analysis on this data. Let's use Map/Reduce to solve this issue.
 
-### 4.1 Install Zeppelin
+### 5.1 Install Zeppelin
 First we need to install zeppelin, simply run `dcos package install zeppelin`. Zeppelin is a web notepage, where you can post scala code to a big text input field. When you hit the compile button, this scala code will be compiled and executed a proper Spark cluster.
 
-### 4.2 Do the analytics
+### 5.2 Do the analytics
 If you go the the DC/OS UI in the service section and hover the zeppelin application, you will see a link to an external application. Follow this link to Zeppelin UI. On the left handside you will see an option to upload a notebook, please upload the `zeppelin-analysis.json` file. When you now open the notebook, you will see a pre-defined Spark job. 
 
 ![Zeppelin](images/zeppelin1.png)
@@ -312,11 +315,17 @@ After installing Zeppelin and running our Map/Reduce job, we should see a cluste
 
 ![Utilization 3](images/resources3.png)
 
-WOW! We increased the CPU utilization nearly to maximum to run our Spark job and went from initially 4 running tasks to 19. This is great 🎉
+WOW! We increased the CPU utilization nearly to maximum to run our Spark job and went from initially 7 running tasks to 22. This is great 🎉
 
 If we want to continue in this demo and install Elasticsearch, we need to give resources back to the cluster and de-install Zeppelin. But this is no problem, because Mesos is all about using only currently needed resources and give it back afterwards.
 
-## 5. Elasticsearch
-Ok, still not enough data applications installed? Good! I have one more thing for you! Let's go back to the `Catalog` in the DC/OS UI or use the CLI to install the Elasticsearch package.
+## 6. Elasticsearch as full text search
+Ok, still not enough data applications used? Good! I have one more thing for you! We are already using Elasticsearch as central logging sink. Now we want to start another migration to synchronize our beer descriptions to Elasticsearch and add fulltext search to our beer descriptions. Simply go to `elasticsearch-migration` and run `dcos job add job-configuration.json` (TODO ADD) to add the job and `dcos job run migration` to execute it once.
 
+If you point your browser to your public ip on path `/search?q=hops` you will get a similar answer:
+
+```
 TODO
+```
+
+Our beer application will proxy the search query to the elasticsearch and will forward the response.
