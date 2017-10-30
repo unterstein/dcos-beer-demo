@@ -14,6 +14,7 @@ services:
       - SERVICE_VERSION=2
       - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/beer?user=good&password=beer
       - LOGSTASH_DESTINATION=logstash:5000
+      - WAIT_AT_STARTUP=true
 
   elasticsearch:
     image: elasticsearch:5.5.2

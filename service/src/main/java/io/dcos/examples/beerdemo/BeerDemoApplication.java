@@ -76,7 +76,10 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
   }
 
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws InterruptedException {
+    if ("true".equals(System.getenv("WAIT_AT_STARTUP"))) {
+      Thread.sleep(15000);
+    }
     SpringApplication.run(BeerDemoApplication.class, args);
   }
 
