@@ -39,10 +39,11 @@
       {
          "id":"/beer/service",
          "dependencies":[
-            "/beer/database"
+            "/beer/database",
+            "/beer/logstash"
          ],
          "cpus":1,
-         "mem":1024,
+         "mem":2024,
          "instances":2,
          "healthChecks":[
             {
@@ -50,7 +51,7 @@
                "path":"/application/health",
                "portIndex":0,
                "timeoutSeconds":10,
-               "gracePeriodSeconds":10,
+               "gracePeriodSeconds":60,
                "intervalSeconds":2,
                "maxConsecutiveFailures":10
             }
@@ -70,15 +71,131 @@
             }
          },
          "env":{
-            "VERSION": "3",
-            "SPRING_DATASOURCE_URL":"jdbc:mysql://database.marathon.l4lb.thisdcos.directory:3306/beer?user=good&password=beer"
+            "VERSION":"3",
+            "SPRING_DATASOURCE_URL":"jdbc:mysql://database.marathon.l4lb.thisdcos.directory:3306/beer?user=good&password=beer",
+            "LOGSTASH_DESTINATION":"logstash.marathon.l4lb.thisdcos.directory:5000"
          },
          "upgradeStrategy":{
             "minimumHealthCapacity":0.85,
             "maximumOverCapacity":0.15
          },
          "labels":{
-            "HAPROXY_0_VHOST":"beer-publicslavelo-1xz30n8yczito-1143575254.us-west-2.elb.amazonaws.com",
+            "HAPROXY_0_PORT":"80",
+            "HAPROXY_GROUP":"external"
+         }
+      },
+      {
+         "id":"/beer/logstash",
+         "dependencies":[
+            "/beer/elasticsearch"
+         ],
+         "cpus":1.0,
+         "mem":512,
+         "instances":1,
+         "healthChecks":[
+            {
+               "protocol":"TCP",
+               "portIndex":0,
+               "timeoutSeconds":10,
+               "gracePeriodSeconds":90,
+               "intervalSeconds":2,
+               "maxConsecutiveFailures":10
+            }
+         ],
+         "container":{
+            "type":"DOCKER",
+            "docker":{
+               "image":"logstash:5.5.2",
+               "network":"BRIDGE",
+               "portMappings":[
+                  {
+                     "hostPort":0,
+                     "containerPort":5000,
+                     "protocol":"tcp",
+                     "labels":{
+                        "VIP_0":"logstash:5000"
+                     }
+                  }
+               ]
+            }
+         },
+         "cmd":"/docker-entrypoint.sh -e 'input { tcp { port => 5000 } } output { elasticsearch { hosts => \"http://elasticsearch.marathon.l4lb.thisdcos.directory:9200\" } }'"
+      },
+      {
+         "id":"/beer/elasticsearch",
+         "cpus":2,
+         "mem":4096,
+         "instances":1,
+         "healthChecks":[
+            {
+               "protocol":"HTTP",
+               "path":"/",
+               "portIndex":0,
+               "timeoutSeconds":10,
+               "gracePeriodSeconds":10,
+               "intervalSeconds":2,
+               "maxConsecutiveFailures":10
+            }
+         ],
+         "container":{
+            "type":"DOCKER",
+            "docker":{
+               "image":"elasticsearch:5.5.2",
+               "network":"BRIDGE",
+               "portMappings":[
+                  {
+                     "hostPort":0,
+                     "containerPort":9200,
+                     "protocol":"tcp",
+                     "labels":{
+                        "VIP_0":"elasticsearch:9200"
+                     }
+                  }
+               ]
+            }
+         },
+         "env":{
+            "ES_JAVA_OPTS":"-Xmx3072m -Xms3072m"
+         }
+      },
+      {
+         "id":"/beer/kibana",
+         "dependencies":[
+            "/beer/elasticsearch"
+         ],
+         "cpus":0.5,
+         "mem":512,
+         "instances":1,
+         "healthChecks":[
+            {
+               "protocol":"HTTP",
+               "path":"/",
+               "portIndex":0,
+               "timeoutSeconds":10,
+               "gracePeriodSeconds":10,
+               "intervalSeconds":2,
+               "maxConsecutiveFailures":10
+            }
+         ],
+         "container":{
+            "type":"DOCKER",
+            "docker":{
+               "image":"kibana:5.5.2",
+               "network":"BRIDGE",
+               "portMappings":[
+                  {
+                     "hostPort":0,
+                     "containerPort":5601,
+                     "protocol":"tcp"
+                  }
+               ]
+            }
+         },
+         "env":{
+            "ELASTICSEARCH_URL":"http://elasticsearch.marathon.l4lb.thisdcos.directory:9200"
+         },
+         "labels":{
+            "HAPROXY_0_PORT":"5601",
             "HAPROXY_GROUP":"external"
          }
       }
