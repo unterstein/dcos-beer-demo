@@ -251,8 +251,20 @@ Ok, let's break it! Remember that we talked about health checks and that you can
 ### 1.5 Update it
 Mostly every configuration change will trigger a deployment. Usually you would use a new docker version or change endpoints or something similar. In this example we will update our environment variable `VERSION`. Simply go to the UI and navigate to the java service and the environment section. You can change the configuration from 3 to 4 here. When you hit the save button, you will trigger a rolling deployment. When you now constantly refresh your browser tab with the beer of the day responses, you will see that sometimes you will get a `"version": "3"` and sometimes a `"version": "4"`.
 
+
 ## 2. Check Elasticsearch for logging synchronization
-TODO
+If we are able to be deploy and scale dynamically across all cluster nodes, we should take care of gathering logs in a centralized place. If you do this, you have one place to search in your logs and you don't need to login to every single container. Additionally you will keep your logs, even if the container terminates.
+
+If you point your browser to your public ip on port 5601 you will see a similar search result as shown below:
+
+![Kibana 1](images/kibana1.png)
+
+Depending on the requests you made against the java beer service, you will see more or less log entries in this Kibana search result. Properties like `version`, `uuid`, `log level` or `host` will be exposed as first class property and can be selected as filter afterwards. This feature is really nice to distinguish between log entries of different applications but also be able to search over all log entries of a certain application in a highly distributed and dynamic world.
+
+Additionally you could also create a visualization to display the data in a pie chart, line chart or compose those visalizations to a fancy dashboard as shown below:
+
+![Kibana 2](images/kibana1.png)
+TODO ^
 
 ## 3. Extract rich data to Neo4j
 ### 3.1 Install Neo4j
@@ -283,6 +295,7 @@ After installing Neo4j and running the migration, we should see a cluster utiliz
 ![Utilization 2](images/resources2.png)
 
 You see, we increased the CPU utilization from 27% to 52% by running our data services together with our Java services.
+
 
 ## 5. Map/Reduce
 Imagine we would have a huge data set which fits not in memory, but we want to do analysis on this data. Let's use Map/Reduce to solve this issue.
@@ -318,6 +331,7 @@ After installing Zeppelin and running our Map/Reduce job, we should see a cluste
 WOW! We increased the CPU utilization nearly to maximum to run our Spark job and went from initially 7 running tasks to 22. This is great 🎉
 
 If we want to continue in this demo and install Elasticsearch, we need to give resources back to the cluster and de-install Zeppelin. But this is no problem, because Mesos is all about using only currently needed resources and give it back afterwards.
+
 
 ## 6. Elasticsearch as full text search
 Ok, still not enough data applications used? Good! I have one more thing for you! We are already using Elasticsearch as central logging sink. Now we want to start another migration to synchronize our beer descriptions to Elasticsearch and add fulltext search to our beer descriptions. Simply go to `elasticsearch-migration` and run `dcos job add job-configuration.json` (TODO ADD) to add the job and `dcos job run migration` to execute it once.
