@@ -1,7 +1,10 @@
-#!/bin/bash
+#!/bin/bash -e
 
 cd $(dirname $0)
 
-./service/build.sh
-./database/build.sh
-./neo4j-migration/build.sh
+cd service
+./build.sh
+cd ../database
+./build.sh
+cd ../neo4j-migration
+./build.sh
