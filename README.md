@@ -35,13 +35,13 @@ You can find the sql files and the related readme in the `database/sql` folder. 
 Ok, now you know the domain: Let's talk about our story! 
 
 1. In this demo we want to build a simple Spring Boot service first that offers us a random beer of the day via HTTP API. You can find a spring boot web application in the `service` folder. We see all the application lifecycle steps her,e from deploy over scale to break, update and recover.
-1. After we successfully implement our service using the openbeerdb data, we want to do more analysis with the Neo4j graph database. You can find the data migration implementation in the `neo4j-migration` folder. 
-1. Using the power of a graph database, we can do fancy queries like `List all styles of beers produced in a certain place and show many breweries produce it there` without the hassle of complicated joins.
-1. After we do complex analysis in a graph database, we want to do mass analysis using a Map/Reduce job in Spark. You can find a Zeppelin notepad in the file `zeppelin-analysis.json` containing a Map/Reduce job to count all the words in beer descriptions to give an overview of what words are used in a beer description.
-1. Last but not least, we will see how to use Elasticsearch to back our service architecture with a centralized logging system.
+2. After we successfully implement our service using the openbeerdb data, we want to do more analysis with the Neo4j graph database. You can find the data migration implementation in the `neo4j-migration` folder.
+3. Using the power of a graph database, we can do fancy queries like `List all styles of beers produced in a certain place and show many breweries produce it there` without the hassle of complicated joins.
+4. After we do complex analysis in a graph database, we want to do mass analysis using a Map/Reduce job in Spark. You can find a Zeppelin notepad in the file `zeppelin-analysis.json` containing a Map/Reduce job to count all the words in beer descriptions to give an overview of what words are used in a beer description.
+5. Last but not least, we will see how to use Elasticsearch to back our service architecture with a centralized logging system.
 
 ## 0. Docker
-We are using Docker in this demo to package most parts of our system. This is important because we want to run exactly the same code in development, stage, and production. We just want to change the environment-specific configuration for each of those stages. 
+We are using Docker in this demo to package most parts of our system. This is important because we want to run exactly the same code in development, stage, and production. We just want to change the environment-specific configuration for each of those stages.
 You can find the Docker files in the `database` and `service` folders. Both images are rather simple, starting with an official base image of `mysql` or `java` and just adding the initial sql files or the application jar file.
 
 Our Docker Compose configuration looks like this:
@@ -96,8 +96,8 @@ You can see a database without configuration in the first section. In the second
 This service basically has three endpoints.
 
 1. `GET /` delivers the beer of the day.
-1. `GET /application/health` will respond with a `HTTP 200` as long as the internal state indicates a healthy system. This endpoint will return a `HTTP 500` otherwise. The service is healthy by default.
-1. `DELETE /health`. You can switch the internal state of the service to unhealthy by calling this endpoint.
+2. `GET /application/health` will respond with a `HTTP 200` as long as the internal state indicates a healthy system. This endpoint will return a `HTTP 500` otherwise. The service is healthy by default.
+3. `DELETE /health`. You can switch the internal state of the service to unhealthy by calling this endpoint.
 
 If you point your browser to `$dockerIp:8080`, you will get the following answer:
 
@@ -207,11 +207,11 @@ Similar to a Docker Compose file, you can find a marathon group definition in th
 }
 ```
 
-When we follow the application definition, we see that this is familiar to us, but we can just configure more things here. <!-- I don't understand this sentence --> 
+This above definition is a little bit more verbose than the docker compose file, but we are configuring more options here.
 
 Each application has an identifier followed by resource limitations. Our database application is allowed to consume 1 CPU and 1GB of memory.
 
-We want to start one database instance and we want to use the same Docker images again as we used for Docker Compose. But now we need to configure a network option because we are dealing with a real distributed system and not a local sandbox. In this example, you see two [virtual IP](TODO) configurations. One with a name-based pattern and one with an IP-based pattern. With this configuration, all traffic on this name-port combination is routed to our database application.
+We want to start one database instance and we want to use the same Docker images again as we used for Docker Compose. But now we need to configure a network option because we are dealing with a real distributed system and not a local sandbox. In this example, you see two [virtual IP](https://docs.mesosphere.com/1.10/networking/load-balancing-vips/) configurations. One with a name-based pattern and one with an IP-based pattern. With this configuration, all traffic on this name-port combination is routed to our database application.
 
 Our Java application has a dependency to the database, so it is deployed after the database is marked as healthy. This service also has resource limitations, but we want to start two instances of this service. We also have a health check configured for the Java service.
 
@@ -219,14 +219,14 @@ The health check specifies that the `/application/health` endpoint will be check
 
 To expose our application to the outside, we need to add a network configuration. Because we added a `labels` section for our HAproxy later in the configuration, we can use a random host port in this section.
 
-To connect this Java service to the database, we need to adjust the environment variables. In this example we are using the name-based VIP pattern, so we need to use this discovery name: `database.marathon.l4lb.thisdcos.directory`. See the [docs](https://docs.mesosphere.com/1.10/usage/service-discovery/dns-overview/) for more information.
+To connect this Java service to the database, we need to adjust the environment variables. In this example we are using the name-based VIP pattern, so we need to use this discovery name: `database.marathon.l4lb.thisdcos.directory`. See the [docs](https://docs.mesosphere.com/1.10/networking/dns-overview/) for more information.
 
 Last but not least, we added configuration for rolling upgrades. During an upgrade, we want a maximum overcapacity of 15% and a minimum health capacity of 85%. Image you have 20 services running. A rolling upgrade would be like, `start 3 new ones, wait for them to become healthy, then stop old ones`. If you don't like rolling upgrades, you can use blue/green or canary upgrades as well. See the [docs](https://docs.mesosphere.com/1.8/usage/service-discovery/load-balancing-vips/) for more information.
 
 ### 1.1 Deploy our system to DC/OS
 If you have the DC/OS CLI installed, you can simply run `dcos marathon group add marathon-configuration.json` to install our group of applications. You can do this via the UI as well.
 
-In order to expose this application to the outside, you will need to install Marathon-LB. Marathon-LB is a dynamic HAproxy that will automatically configure the applications running in Marathon. If you have an application with HAPROXY labels, Marathon-LB will route load balanced traffic from the outside to the healthy running instances. You can install Marathon-LB via the UI or via the CLI. Simply run `dcos package install marathon-lb`. 
+In order to expose this application to the outside, you will need to install Marathon-LB. Marathon-LB is a dynamic HAproxy that will automatically configure the applications running in Marathon. If you have an application with HAPROXY labels, Marathon-LB will route load balanced traffic from the outside to the healthy running instances. You can install Marathon-LB via the UI or via the CLI. Simply run `dcos package install marathon-lb`.
 
 ### Check utilization
 After installation is finished, we should see cluster utilization as shown below:
@@ -268,15 +268,14 @@ Depending on the requests you made against the Java beer service, you will see m
 
 Additionally, you could create a visualization to display the data in a pie chart, line chart, or compose those visalizations into a fancy dashboard as shown below:
 
-![Kibana 2](images/kibana1.png)
-TODO ^
+![Kibana 2](images/kibana2.png)
 
 ## 3. Extract rich data to Neo4j
 ### 3.1 Install Neo4j
 To install a proper Neo4j [causal cluster](http://neo4j.com/docs/operations-manual/current/clustering/causal-clustering/), simply run `dcos package install neo4j`. This will install a Neo4j cluster of 3 Neo4j core nodes. If you want to access your Neo4j cluster from outside of your DC/OS cluster, you will also need to install the `neo4j-proxy` package. DC/OS is designed to run applications internally on private nodes by default.
 
 ### 3.2 The migration job
-In order to migrate the database from MySQL to Neo4j, we need to run a migration. In DC/OS, we can run the migration one time or as scheduled jobs. Simply go to the `neo4j-migration` and run `dcos job add job-configuration.json` (TODO ADD) to add the job and `dcos job run migration` to execute it once.
+In order to migrate the database from MySQL to Neo4j, we need to run a migration. In DC/OS, we can run the migration one time or as scheduled jobs. Simply go to the `neo4j-migration` and run `dcos job add job-configuration.json` and `dcos job run neo4j-migration` to execute it once.
 
 
 ## 4. Query connected data
@@ -308,7 +307,7 @@ Imagine we had a huge data set that doesn't fit in memory, but we want to do ana
 First we need to install Zeppelin. Run `dcos package install zeppelin`. Zeppelin is a web notebook <!--not sure if this is a correct change --> where you can post Scala code to a big text input field. When you hit the compile button, this Scala code will be compiled and executed in a Spark cluster.
 
 ### 5.2 Do the analytics
-If you go the the DC/OS UI in the Services section of the DC/OS UI and hover over the Zeppelin application, you will see a link to an external application. Follow this link to access the Zeppelin UI. On the left hand side, you will see an option to upload a noteboo;. Upload the `zeppelin-analysis.json` file. When you now open the notebook, you will see a predefined Spark job. 
+If you go the the DC/OS UI in the Services section of the DC/OS UI and hover over the Zeppelin application, you will see a link to an external application. Follow this link to access the Zeppelin UI. On the left hand side, you will see an option to upload a noteboo;. Upload the `zeppelin-analysis.json` file. When you now open the notebook, you will see a predefined Spark job.
 
 ![Zeppelin](images/zeppelin1.png)
 
@@ -338,7 +337,7 @@ If we want to continue in this demo and install Elasticsearch, we need to give r
 
 
 ## 6. Elasticsearch as full text search
-Ok, still not enough data applications for you? Good! I have one more thing for you! We are already using Elasticsearch as a central logging sink. Now, we want to start another migration to synchronize our beer descriptions to Elasticsearch and add full text search to our beer descriptions. Simply go to `elasticsearch-migration` and run `dcos job add job-configuration.json` (TODO ADD) to add the job and `dcos job run migration` to execute it once.
+Ok, still not enough data applications for you? Good! I have one more thing for you! We are already using Elasticsearch as a central logging sink. Now, we want to start another migration to synchronize our beer descriptions to Elasticsearch and add full text search to our beer descriptions. Simply go to `elasticsearch-migration` and run `dcos job add job-configuration.json` and `dcos job run elasticsearch-migration` to execute it once.
 
 Point your browser to your public IP on path `/search?q=hops` to see a similar answer:
 
@@ -347,3 +346,4 @@ TODO
 ```
 
 Our beer application will proxy the search query to Elasticsearch and will forward the response.
+I
