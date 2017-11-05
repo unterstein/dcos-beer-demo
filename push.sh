@@ -1,7 +1,6 @@
 #!/bin/bash
 
-cd $(dirname $0)
-
 docker push unterstein/dcos-beer-service:latest
 docker push unterstein/dcos-beer-database:latest
-docker push unterstein/dcos-beer-migration:latest
+docker push unterstein/dcos-beer-neo4j-migration:latest
+docker push unterstein/dcos-beer-elasticsearch-migration:latest
