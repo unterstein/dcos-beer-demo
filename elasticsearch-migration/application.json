@@ -5,7 +5,7 @@
     "type": "DOCKER",
     "volumes": [],
     "docker": {
-      "image": "unterstein/dcos-beer-migration",
+      "image": "unterstein/dcos-beer-elasticsearch-migration",
       "forcePullImage": true
     }
   },

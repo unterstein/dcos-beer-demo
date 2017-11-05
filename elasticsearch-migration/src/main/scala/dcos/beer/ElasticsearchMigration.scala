@@ -17,13 +17,13 @@ import scala.collection.JavaConverters._
 @SpringBootApplication
 object ElasticsearchMigration extends App {
 
-  val index = "beerdb"
+  val index = "beer"
 
   val mysqlDriver = new DriverManagerDataSource(sys.env("SQL_URL"))
   mysqlDriver.setDriverClassName("com.mysql.jdbc.Driver")
   val mysqlTemplate = new JdbcTemplate(mysqlDriver)
 
-  private val settings = Settings.builder() /*.put("cluster.name", "myClusterName")*/ .build()
+  val settings = Settings.builder() /*.put("cluster.name", "myClusterName")*/ .build()
   val client: Client = new PreBuiltTransportClient(settings)
       .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(sys.env("ELASTICSEARCH_URL")), 9300))
 
@@ -47,7 +47,7 @@ object ElasticsearchMigration extends App {
     )
         .execute().actionGet()
   }
-  val beers = mysqlTemplate.queryForList("SELECT id, brewery_id, cat_id, style_id, name FROM `beers`").toList
+  val beers = mysqlTemplate.queryForList("SELECT id, name, descript FROM `beers` where descript != ''").toList
   val bulkIndex = client.prepareBulk()
   beers.map {
     beer =>
@@ -62,7 +62,7 @@ object ElasticsearchMigration extends App {
   }.foreach(bulkIndex.add)
   println("finished beers")
 
-  val breweries = mysqlTemplate.queryForList("select b.id, b.name, b.city, b.state, b.country, g.latitude, g.longitude from `breweries` b LEFT JOIN `breweries_geocode` g ON b.id = g.brewery_id").toList
+  val breweries = mysqlTemplate.queryForList("select id, name, descript from `breweries` where descript != ''").toList
   breweries.map {
     brewery =>
       client.prepareIndex(index, "brewery")
