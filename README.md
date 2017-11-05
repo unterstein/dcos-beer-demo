@@ -364,6 +364,8 @@ After installation is finished, we should see cluster utilization as shown below
 
 ![Utilization 1](images/resources1.png)
 
+This is the first time, we see the DC/OS dashboard in this demo. This dashboard combines the most important facts an operates cares about when he gets paged at 3am. You see an aggregated view on your resources, you see an aggregated view on your cpu, memory and disk allocations. Furthermore you see the amount and health status of your deployed applications and about the health of DC/OS itself. If you would scroll down in the real dashboard, you would see information about the nodes of this cluster. But the fact that this cluster contains 7 agents is just a detail and only relevant if the other numbers are not good.
+
 ### 1.2 See it working
 Point your browser to your public IP. You will get an answer like this:
 
@@ -397,7 +399,7 @@ Point your browser to your public IP on port 5601 to see a similar search result
 
 Depending on the requests you made against the Java beer service, you will see more or fewer log entries in this Kibana search result. Properties like `version`, `uuid`, `log level`, and `host` will be exposed as first class properties and can be selected as a filter. This feature helps you distinguish between log entries of different applications, but also allows you to search all log entries of a certain application in a highly distributed and dynamic system.
 
-Additionally, you could create a visualization to display the data in a pie chart, line chart, or compose those visalizations into a fancy dashboard as shown below:
+Additionally, you could create a visualization to display the data in a pie chart, line chart, or compose those visalizations into a fancy visualization as shown below:
 
 ![Kibana 2](images/kibana2.png)
 
@@ -513,3 +515,6 @@ Point your browser to your public IP on path `/search?q=hops` to see a similar a
 ```
 
 Our beer application will proxy the search query to Elasticsearch and will return the response.
+
+## Conclusion
+Cheers 🍺
