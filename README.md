@@ -2,7 +2,7 @@
 
 ![Model](images/components.png)
 
-Are you wondering how [Java](http://www.oracle.com/technetwork/java/index.html), [Spring Boot](https://projects.spring.io/spring-boot/), [MySQL](https://www.mysql.com), [Neo4j](https://neo4j.com), [Zeppelin](), [Apache Spark](https://spark.apache.org/), [Elasticsearch](https://www.elastic.co), [Docker](https://www.docker.com) and [DC/OS](https://dcos.io) can all fit in one demo? Well, we'll show you! This is a rather complex demo, so grab your favorit beer and enjoy. 🍺
+Are you wondering how [Java](http://www.oracle.com/technetwork/java/index.html), [Spring Boot](https://projects.spring.io/spring-boot/), [MySQL](https://www.mysql.com), [Neo4j](https://neo4j.com), [Apache Zeppelin](https://zeppelin.apache.org/), [Apache Spark](https://spark.apache.org/), [Elasticsearch](https://www.elastic.co), [Docker](https://www.docker.com), [Apache Mesos](https://mesos.apache.org/) and [DC/OS](https://dcos.io) can all fit in one demo? Well, we'll show you! This is a rather complex demo, so grab your favorite beer and enjoy. 🍺
 
 ## General problems of current data center layouts
 Most current data centers are architectured to be statically partitioned. This means that you have different subclusters for each part of your system. Let's say your data center has 30 nodes. You would typically slice these 30 nodes into smaller parts and assign applications to dedicated nodes. This has a couple of disadvantages. You need to optimize each subcluster against load peaks and, if nodes crash during those peaks, you are not able to shift applications to other nodes dynamically. On top of that, you're using resources inefficiently.
@@ -23,7 +23,7 @@ In general, there are three different kinds of applications.
 
 ![Storage options](images/storage.png)
 
-1. Stateless applications, like `nginx`, `spring boot` or `node` applications. They usually don't hold business-relevant data, so we usually don't care where replacement applications are scheduled or if we get the data back if an application crashes. For sure, this kind of applications produces logs, but we will take care of those seperately. In Mesos, you can configure a default sandbox for those applications. You can use local disk, but, if the container crashes, this data is gone.
+1. Stateless applications, like `nginx`, `spring boot` or `node` applications. They usually don't hold business-relevant data, so we usually don't care where replacement applications are scheduled or if we get the data back if an application crashes. For sure, this kind of applications produces logs, but we will take care of those separately. In Mesos, you can configure a default sandbox for those applications. You can use local disk, but, if the container crashes, this data is gone.
 
 2. Stateful applications, traditional databases without cluster support, for example `MySQL`. They hold business-relevant data and we usually care a lot about what happens to this data if an application crashes. Because these applications don't support replication on their own, you must use backups and external storage to save data. If you really want to have a smooth fail-over strategy, you would usually pick an external storage option for those kind of tasks. This option has poor performance for write requests, but survives node failures. In Mesos, you can consume external storage, such as Amazon EBS.
 
@@ -357,7 +357,7 @@ Last but not least, we added configuration for rolling upgrades. During an upgra
 ### 1.1 Deploy our system to DC/OS
 If you have the DC/OS CLI installed, you can simply run `dcos marathon group add marathon-configuration.json` to install our group of applications. You can do this via the UI as well.
 
-In order to expose this application to the outside, you will need to install Marathon-LB. Marathon-LB is a dynamic HAproxy that will automatically configure the applications running in Marathon. If you have an application with HAPROXY labels, Marathon-LB will route load balanced traffic from the outside to the healthy running instances. You can install Marathon-LB via the UI or via the CLI. Simply run `dcos package install marathon-lb`.
+In order to expose this application to the outside, you will need to install Marathon-LB. Marathon-LB is a dynamic HAproxy that will automatically configure the applications running in Marathon. If you have an application with `HAPROXY` labels, Marathon-LB will route load balanced traffic from the outside to the healthy running instances. You can install Marathon-LB via the UI or via the CLI. Simply run `dcos package install marathon-lb`.
 
 ### Check utilization
 After installation is finished, we should see cluster utilization as shown below:
@@ -399,7 +399,7 @@ Point your browser to your public IP on port 5601 to see a similar search result
 
 Depending on the requests you made against the Java beer service, you will see more or fewer log entries in this Kibana search result. Properties like `version`, `uuid`, `log level`, and `host` will be exposed as first class properties and can be selected as a filter. This feature helps you distinguish between log entries of different applications, but also allows you to search all log entries of a certain application in a highly distributed and dynamic system.
 
-Additionally, you could create a visualization to display the data in a pie chart, line chart, or compose those visalizations into a fancy visualization as shown below:
+Additionally, you could create a visualization to display the data in a pie chart, line chart, or compose those visualizations into a fancy dashboard as shown below:
 
 ![Kibana 2](images/kibana2.png)
 
@@ -447,17 +447,17 @@ If you go the the DC/OS UI in the Services section of the DC/OS UI and hover ove
 In the first section, you can see our declared dependencies. We want to import SQL data, so we import our MySQL connector.
 
 In the second section, you see the actual job. First we create a connection. This time, we are using IP-based VIP discovery.
-Then we are concurrenty querying for 5,000 beers, then filtering noise and splitting it into a single sequence of words. Then, we are perform a basic word count algorithm.
+Then we are concurrently querying for 5,000 beers, then filtering noise and splitting it into a single sequence of words. Then, we are perform a basic word count algorithm.
 
 In the map phase, we are transforming each single word to a tuple of (word, 1). For example the word `beer` would be transformed to `(beer, 1)`. This can be done in parallel.
 
 In the reduce phase, we are transforming each tuple with the same key to a new tuple, but the sum of the values. For example `(beer, 1)` and `(beer, 1)` would be transformed to `(beer, 2)`. This can also be in parallel.
 
-In the third and last section, you can query the result of the reduce phase with a SQL-like language. In this example we are selecting the words ordered by descending occurence:
+In the third and last section, you can query the result of the reduce phase with a SQL-like language. In this example we are selecting the words ordered by descending occurrence:
 
 ![Word count result](images/zeppelin2.png)
 
-You can see the occurences of `573 on hops`, `488 on malt`, `428 flavor`. Yummy, these are good words to describe beer! So, if I were a data analyst, I would try to find relations between those frequent words to optimize my own beer description.
+You can see the occurrences of `573 on hops`, `488 on malt`, `428 flavor`. Yummy, these are good words to describe beer! So, if I were a data analyst, I would try to find relations between those frequent words to optimize my own beer description.
 
 ### Check utilization
 After installing Zeppelin and running our Map/Reduce job, we should see a cluster utilization as shown below:
