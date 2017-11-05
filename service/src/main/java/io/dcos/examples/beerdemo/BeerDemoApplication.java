@@ -2,6 +2,11 @@ package io.dcos.examples.beerdemo;
 
 import io.dcos.examples.beerdemo.api.BeerResponse;
 import io.dcos.examples.beerdemo.api.HealthResponse;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -12,10 +17,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Locale;
 import java.util.Map;
@@ -31,6 +39,11 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
   // stores the application version of this service
   @Value("${SERVICE_VERSION:1}")
   private String version;
+
+  @Value("${ELASTICSEARCH_URL:http://localhost:9200}")
+  private String elasticsearchUrl;
+
+  private final CloseableHttpClient client = HttpClients.createDefault();
 
   private String uuid = UUID.randomUUID().toString().replace("-", "");
 
@@ -51,7 +64,7 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
   }
 
   @RequestMapping("/")
-  public BeerResponse randomBeer(final Locale locale) {
+  public BeerResponse randomBeer(Locale locale) {
     Map<String, Object> query = template.queryForMap(
         "SELECT b.id, b.name, b.descript, s.style_name " +
             "FROM `beers` b LEFT JOIN `styles` s " +
@@ -67,6 +80,12 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
         "" + query.get("style_name"),
         query.get("descript").toString()
     );
+  }
+
+  @RequestMapping(value = "/search", produces = "application/json")
+  public String searchProxy(@RequestParam("q") String query) throws URISyntaxException, IOException {
+    CloseableHttpResponse response = client.execute(new HttpGet(elasticsearchUrl + "/beer/_search?q=" + query));
+    return IOUtils.toString(response.getEntity().getContent(), "UTF-8");
   }
 
   @RequestMapping(value = "/health", method = RequestMethod.DELETE)

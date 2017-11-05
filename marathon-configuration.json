@@ -73,7 +73,8 @@
          "env":{
             "VERSION":"3",
             "SPRING_DATASOURCE_URL":"jdbc:mysql://database.marathon.l4lb.thisdcos.directory:3306/beer?user=good&password=beer",
-            "LOGSTASH_DESTINATION":"logstash.marathon.l4lb.thisdcos.directory:5000"
+            "LOGSTASH_DESTINATION":"logstash.marathon.l4lb.thisdcos.directory:5000",
+            "ELASTICSEARCH_URL":"http://elasticsearch.marathon.l4lb.thisdcos.directory:9200"
          },
          "upgradeStrategy":{
             "minimumHealthCapacity":0.85,
