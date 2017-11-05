@@ -342,8 +342,43 @@ Ok, still not enough data applications for you? Good! I have one more thing for 
 Point your browser to your public IP on path `/search?q=hops` to see a similar answer:
 
 ```
-TODO
+{
+   "took":5,
+   "timed_out":false,
+   "_shards":{
+      "total":5,
+      "successful":5,
+      "skipped":0,
+      "failed":0
+   },
+   "hits":{
+      "total":785,
+      "max_score":1.8710579,
+      "hits":[
+         {
+            "_index":"beer",
+            "_type":"beer",
+            "_id":"2360",
+            "_score":1.8710579,
+            "_source":{
+               "name":"Bottle Rocket IPA",
+               "description":"An explosion of hops dominate this deep golden ale. Brewed with four varieties of hops & dry hopped with three other hops, the flavor is powerful. Not a harsh bitterness, but a full hop flavor."
+            }
+         },
+         {
+            "_index":"beer",
+            "_type":"beer",
+            "_id":"4412",
+            "_score":1.84492,
+            "_source":{
+               "name":"Rockslide IPA",
+               "description":"If being in one of the coldest places in the US isn't extreme enough, the contents of this beer may very well redefine your commitment to the pursuit of hops. Rockslide IPA is brewed in the 'West Coast' style with aggressive amounts of American hops such as Amarillo, Centennial and Summit hops. You are greeted with a full frontal assault of citrus/grapefruit/pine hop character, followed up with malt to balance the mouthfeel. This beer is all about hops."
+            }
+         },
+         ...
+      ]
+   }
+}
 ```
 
-Our beer application will proxy the search query to Elasticsearch and will forward the response.
-I
+Our beer application will proxy the search query to Elasticsearch and will return the response.

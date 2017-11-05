@@ -21,9 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Locale;
 import java.util.Map;
@@ -83,9 +81,12 @@ public class BeerDemoApplication extends WebMvcConfigurerAdapter {
   }
 
   @RequestMapping(value = "/search", produces = "application/json")
-  public String searchProxy(@RequestParam("q") String query) throws URISyntaxException, IOException {
-    CloseableHttpResponse response = client.execute(new HttpGet(elasticsearchUrl + "/beer/_search?q=" + query));
-    return IOUtils.toString(response.getEntity().getContent(), "UTF-8");
+  public String searchProxy(@RequestParam("q") String query) {
+    try (CloseableHttpResponse response = client.execute(new HttpGet(elasticsearchUrl + "/beer/_search?q=" + query))) {
+      return IOUtils.toString(response.getEntity().getContent(), "UTF-8");
+    } catch (Exception e) {
+      throw new RuntimeException("o_O - Error while proxying elasticsearch", e);
+    }
   }
 
   @RequestMapping(value = "/health", method = RequestMethod.DELETE)
