@@ -5,13 +5,16 @@
 Are you wondering how [Java](http://www.oracle.com/technetwork/java/index.html), [Spring Boot](https://projects.spring.io/spring-boot/), [MySQL](https://www.mysql.com), [Neo4j](https://neo4j.com), [Zeppelin](), [Apache Spark](https://spark.apache.org/), [Elasticsearch](https://www.elastic.co), [Docker](https://www.docker.com) and [DC/OS](https://dcos.io) can all fit in one demo? Well, we'll show you! This is a rather complex demo, so grab your favorit beer and enjoy. 🍺
 
 ## General problems of current data center layouts
-Most current data centers are architectured to be staticly partitioned. This means that you have different subclusters for each part of your system. Let's say your data center has 30 nodes. You would typically slice these 30 nodes into smaller parts and assign applications to dedicated nodes. This has a couple of disadvantages. You need to optimize each subcluster against load peaks and, if nodes crash during those peaks, you are not able to shift applications to other nodes dynamically. On top of that, you're using resources inefficiently.
+Most current data centers are architectured to be statically partitioned. This means that you have different subclusters for each part of your system. Let's say your data center has 30 nodes. You would typically slice these 30 nodes into smaller parts and assign applications to dedicated nodes. This has a couple of disadvantages. You need to optimize each subcluster against load peaks and, if nodes crash during those peaks, you are not able to shift applications to other nodes dynamically. On top of that, you're using resources inefficiently.
 
 Resource utilization in typical industry clusters show average CPU utilization around 15% with this classic approach. Would'nt it be cool to be able to shift applications dynamically between nodes, be more flexible against failure and load peaks, and save money?
 
 ![Motivation](images/motivation.png)
 
-In this demo, we will increase cluster utilization by operating the Java service architecture together with all data applications on the same DC/OS cluster. <!-- a little more discussion of what this means might be helpful -->
+In this demo, we will increase cluster utilization by operating the Java service architecture together with all data applications on the same DC/OS cluster. Running all those different kind of application on the same cluster brings a couple of advantages. Your cluster has one big pool of resources and you are able to start applications on free resources everywhere in the cluster.
+
+- In case of failure, your application will be dynamically restarted somewhere else in the cluster.
+- Different applications usually have load peaks at different times of the day and they nicely complement each other. If you don’t partition this pool statically, you don’t need to optimize each part individually and reserve more resource than you need.
 
 ## Operating data applications in a containerized world
 Orchestrating stateless applications in a containerized world is fairly simple. If you need to scale up or down, you just start or stop applications. If an application terminates, you can just restart it somewhere else. But what about operating data applications, like a traditional database or a distributed one? I would bet that you care about your data and where a replacement application is started for example.
@@ -432,7 +435,7 @@ As you can see, we increased the CPU utilization from 27% to 52% by running our 
 Imagine we had a huge data set that doesn't fit in memory, but we want to do analysis on this data anyway. Let's use Map/Reduce to solve this issue.
 
 ### 5.1 Install Zeppelin
-First we need to install Zeppelin. Run `dcos package install zeppelin`. Zeppelin is a web notebook <!--not sure if this is a correct change --> where you can post Scala code to a big text input field. When you hit the compile button, this Scala code will be compiled and executed in a Spark cluster.
+First we need to install Zeppelin. Run `dcos package install zeppelin`. Zeppelin is a web notebook where you can post Scala code to a big text input field. When you hit the compile button, this Scala code will be compiled and executed in a Spark cluster.
 
 ### 5.2 Do the analytics
 If you go the the DC/OS UI in the Services section of the DC/OS UI and hover over the Zeppelin application, you will see a link to an external application. Follow this link to access the Zeppelin UI. On the left hand side, you will see an option to upload a noteboo;. Upload the `zeppelin-analysis.json` file. When you now open the notebook, you will see a predefined Spark job.
