@@ -8,7 +8,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource
 import scala.collection.JavaConversions._
 
 @SpringBootApplication
-object Migration extends App {
+object Neo4jMigration extends App {
 
   val mysqlDriver = new DriverManagerDataSource(sys.env("SQL_URL"))
   mysqlDriver.setDriverClassName("com.mysql.jdbc.Driver")
@@ -75,7 +75,7 @@ object Migration extends App {
   neo4jSession.run("MATCH (beer: Beer), (style: Style) WHERE beer.style = style.id MERGE (beer)-[:HAS_STYLE]->(style);")
   neo4jSession.run("MATCH (category: Category), (style: Style) WHERE style.category = category.id MERGE (style)-[:REFINES]->(category);")
   println("finished relations")
-
+  println("finished neo4j migration")
 
   private def cleanString(s: AnyRef) = s.toString.replace("'", "`")
 }

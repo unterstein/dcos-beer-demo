@@ -1,5 +1,5 @@
 {
-  "id": "/beer/data-migration",
+  "id": "/beer/neo4j-migration",
   "cmd": "env && java -jar <FILENAME> && sleep 1000",
   "instances": 1,
   "cpus": 2,

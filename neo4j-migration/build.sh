@@ -3,4 +3,4 @@
 cd $(dirname $0)
 
 mvn clean install
-docker build --tag unterstein/dcos-beer-migration:latest .
+docker build --tag unterstein/dcos-beer-neo4j-migration:latest .

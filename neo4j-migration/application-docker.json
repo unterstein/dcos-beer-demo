@@ -1,11 +1,11 @@
 {
-  "id": "/beer/data-migration",
+  "id": "/beer/neo4j-migration",
   "cmd": "env && java -jar /app.jar && sleep 1000",
   "container": {
     "type": "DOCKER",
     "volumes": [],
     "docker": {
-      "image": "unterstein/dcos-beer-migration",
+      "image": "unterstein/dcos-beer-neo4j-migration",
       "forcePullImage": true
     }
   },
