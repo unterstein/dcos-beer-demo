@@ -1,5 +1,7 @@
 # The DC/OS beer demo
 
+![Model](images/components.png)
+
 Are you wondering how [Java](http://www.oracle.com/technetwork/java/index.html), [Spring Boot](https://projects.spring.io/spring-boot/), [MySQL](https://www.mysql.com), [Neo4j](https://neo4j.com), [Zeppelin](), [Apache Spark](https://spark.apache.org/), [Elasticsearch](https://www.elastic.co), [Docker](https://www.docker.com) and [DC/OS](https://dcos.io) can all fit in one demo? Well, we'll show you! This is a rather complex demo, so grab your favorit beer and enjoy. 🍺
 
 ## General problems of current data center layouts
@@ -160,10 +162,11 @@ Similar to a Docker Compose file, you can find a marathon group definition in th
       {
          "id":"/beer/service",
          "dependencies":[
-            "/beer/database"
+            "/beer/database",
+            "/beer/logstash"
          ],
          "cpus":1,
-         "mem":1024,
+         "mem":2024,
          "instances":2,
          "healthChecks":[
             {
@@ -171,7 +174,7 @@ Similar to a Docker Compose file, you can find a marathon group definition in th
                "path":"/application/health",
                "portIndex":0,
                "timeoutSeconds":10,
-               "gracePeriodSeconds":10,
+               "gracePeriodSeconds":60,
                "intervalSeconds":2,
                "maxConsecutiveFailures":10
             }
@@ -191,15 +194,140 @@ Similar to a Docker Compose file, you can find a marathon group definition in th
             }
          },
          "env":{
-            "VERSION": "3",
-            "SPRING_DATASOURCE_URL":"jdbc:mysql://database.marathon.l4lb.thisdcos.directory:3306/beer?user=good&password=beer"
+            "VERSION":"3",
+            "SPRING_DATASOURCE_URL":"jdbc:mysql://database.marathon.l4lb.thisdcos.directory:3306/beer?user=good&password=beer",
+            "LOGSTASH_DESTINATION":"logstash.marathon.l4lb.thisdcos.directory:5000",
+            "ELASTICSEARCH_URL":"http://elasticsearch.marathon.l4lb.thisdcos.directory:9200"
          },
          "upgradeStrategy":{
             "minimumHealthCapacity":0.85,
             "maximumOverCapacity":0.15
          },
          "labels":{
-            "HAPROXY_0_VHOST":"your.public.elb.amazonaws.com",
+            "HAPROXY_0_PORT":"80",
+            "HAPROXY_GROUP":"external"
+         }
+      },
+      {
+         "id":"/beer/logstash",
+         "dependencies":[
+            "/beer/elasticsearch"
+         ],
+         "cpus":1.5,
+         "mem":512,
+         "instances":1,
+         "healthChecks":[
+            {
+               "protocol":"TCP",
+               "portIndex":0,
+               "timeoutSeconds":10,
+               "gracePeriodSeconds":90,
+               "intervalSeconds":2,
+               "maxConsecutiveFailures":10
+            }
+         ],
+         "container":{
+            "type":"DOCKER",
+            "docker":{
+               "image":"logstash:5.5.2",
+               "network":"BRIDGE",
+               "portMappings":[
+                  {
+                     "hostPort":0,
+                     "containerPort":5000,
+                     "protocol":"tcp",
+                     "labels":{
+                        "VIP_0":"logstash:5000"
+                     }
+                  }
+               ]
+            }
+         },
+         "cmd":"/docker-entrypoint.sh -e 'input { tcp { port => 5000 codec => json } } output { elasticsearch { hosts => \"http://elasticsearch.marathon.l4lb.thisdcos.directory:9200\" } }'"
+      },
+      {
+         "id":"/beer/elasticsearch",
+         "cpus":2,
+         "mem":4096,
+         "instances":1,
+         "healthChecks":[
+            {
+               "protocol":"HTTP",
+               "path":"/",
+               "portIndex":0,
+               "timeoutSeconds":10,
+               "gracePeriodSeconds":30,
+               "intervalSeconds":2,
+               "maxConsecutiveFailures":10
+            }
+         ],
+         "container":{
+            "type":"DOCKER",
+            "docker":{
+               "image":"elasticsearch:5.5.2",
+               "network":"BRIDGE",
+               "portMappings":[
+                  {
+                     "hostPort":0,
+                     "containerPort":9200,
+                     "protocol":"tcp",
+                     "labels":{
+                        "VIP_0":"elasticsearch:9200"
+                     }
+                  },
+                  {
+                     "hostPort":0,
+                     "containerPort":9300,
+                     "protocol":"tcp",
+                     "labels":{
+                        "VIP_0":"elasticsearch:9300"
+                     }
+                  }
+               ]
+            }
+         },
+         "env":{
+            "ES_JAVA_OPTS":"-Xmx3072m -Xms3072m"
+         }
+      },
+      {
+         "id":"/beer/kibana",
+         "dependencies":[
+            "/beer/elasticsearch"
+         ],
+         "cpus":0.5,
+         "mem":512,
+         "instances":1,
+         "healthChecks":[
+            {
+               "protocol":"HTTP",
+               "path":"/",
+               "portIndex":0,
+               "timeoutSeconds":10,
+               "gracePeriodSeconds":10,
+               "intervalSeconds":2,
+               "maxConsecutiveFailures":10
+            }
+         ],
+         "container":{
+            "type":"DOCKER",
+            "docker":{
+               "image":"kibana:5.5.2",
+               "network":"BRIDGE",
+               "portMappings":[
+                  {
+                     "hostPort":0,
+                     "containerPort":5601,
+                     "protocol":"tcp"
+                  }
+               ]
+            }
+         },
+         "env":{
+            "ELASTICSEARCH_URL":"http://elasticsearch.marathon.l4lb.thisdcos.directory:9200"
+         },
+         "labels":{
+            "HAPROXY_0_PORT":"5601",
             "HAPROXY_GROUP":"external"
          }
       }
