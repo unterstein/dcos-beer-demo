@@ -29,7 +29,7 @@ services:
     image: logstash:5.5.2
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-    command: "-e 'input { tcp { port => 5000 } } output { elasticsearch { hosts => \"http://elasticsearch:9200\" } }'"
+    command: "-e 'input { tcp { port => 5000 codec => json } } output { elasticsearch { hosts => \"http://elasticsearch:9200\" } }'"
     depends_on:
       - elasticsearch
 
