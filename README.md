@@ -287,10 +287,29 @@ Similar to a Docker Compose file, you can find a marathon group definition in th
                      }
                   }
                ]
-            }
+            },
+            "volumes": [
+               {
+                 "containerPath":"esdata",
+                 "mode":"RW",
+                 "persistent": {
+                   "type":"root",
+                   "size":5000
+                 }
+               },
+               {
+                 "containerPath": "/usr/share/elasticsearch/data",
+                 "hostPath": "esdata",
+                 "mode": "RW"
+               }
+            ]
          },
          "env":{
             "ES_JAVA_OPTS":"-Xmx3072m -Xms3072m"
+         },
+         "unreachableStrategy": {
+            "inactiveAfterSeconds": 300,
+            "expunceAfterSeconds": 600
          }
       },
       {
@@ -340,6 +359,7 @@ Similar to a Docker Compose file, you can find a marathon group definition in th
 
 This above definition is a little bit more verbose than the docker compose file, but we are configuring more options here.
 
+#### Spring Boot and MySQL
 Each application has an identifier followed by resource limitations. Our database application is allowed to consume 1 CPU and 1GB of memory.
 
 We want to start one database instance and we want to use the same Docker images again as we used for Docker Compose. But now we need to configure a network option because we are dealing with a real distributed system and not a local sandbox. In this example, you see two [virtual IP](https://docs.mesosphere.com/1.10/networking/load-balancing-vips/) configurations. One with a name-based pattern and one with an IP-based pattern. With this configuration, all traffic on this name-port combination is routed to our database application.
@@ -354,7 +374,66 @@ To connect this Java service to the database, we need to adjust the environment 
 
 Last but not least, we added configuration for rolling upgrades. During an upgrade, we want a maximum overcapacity of 15% and a minimum health capacity of 85%. Image you have 20 services running. A rolling upgrade would be like, `start 3 new ones, wait for them to become healthy, then stop old ones`. If you don't like rolling upgrades, you can use blue/green or canary upgrades as well. See the [docs](https://docs.mesosphere.com/1.8/usage/service-discovery/load-balancing-vips/) for more information.
 
-### 1.1 Deploy our system to DC/OS
+#### Elasticsearch, Logstash, Kibana
+Ok, let's start with Elasticsearch and the three main new configuration options here. First, elasticsearch exposes two [virtual IPs](https://docs.mesosphere.com/1.10/networking/load-balancing-vips/). `elasticsearch:9200` is used by Logstash, Kibana and the migration. `elasticsearch:9300` is used by the spring boot application to proxy search request.
+
+```
+"portMappings":[
+  {
+     "hostPort":0,
+     "containerPort":9200,
+     "protocol":"tcp",
+     "labels":{
+        "VIP_0":"elasticsearch:9200"
+     }
+  },
+  {
+     "hostPort":0,
+     "containerPort":9300,
+     "protocol":"tcp",
+     "labels":{
+        "VIP_0":"elasticsearch:9300"
+     }
+  }
+]
+```
+
+
+Elasticsearch is a distributed database. As discussed earlier, you don't need distributed storage for a distributed database, because you would waste a lot of performance when you have replication on application layer and on storage layer. But on the other side you don't want to loose all your data, when you restart Elasticsearch. In DC/OS you have the option to use [local persistent volumes](http://mesosphere.github.io/marathon/docs/persistent-volumes.html). They allow you to label space on the local disk. If an instance is shut down, due to failure or maintenance, DC/OS is waiting to see this data again and is able to restart the replication instance on the exact same data again. In best case this prevent Elasticsearch from a full replication and leads to a smaller replication for only the last couple of minutes.
+
+```
+"volumes": [
+   {
+     "containerPath":"esdata",
+     "mode":"RW",
+     "persistent": {
+       "type":"root",
+       "size":5000
+     }
+   },
+   {
+     "containerPath": "/usr/share/elasticsearch/data",
+     "hostPath": "esdata",
+     "mode": "RW"
+   }
+]
+```
+
+In a highly distributed system, you eventually lose nodes, applications are unreachable and you are not always sure if your node will come back. Maybe you need your configured amount of Elasticsearch instances always up and running and you tolerate unreachable instances only for a couple of minutes. For this purpose, you can configure an `unreachableStrategy`. With the configuration of the example blow, DC/OS would wait for 5 minutes if an unreachable Elasticsearch instance is detected. After this 5 minutes, DC/OS would start a replacement task. If you are running a proper configured Elasticsearch cluster, you would not experience a downtime, but you give the node some time to come back.
+
+```
+"unreachableStrategy": {
+    "inactiveAfterSeconds": 300,
+    "expunceAfterSeconds": 600
+}
+```
+
+#### Mesosphere Elasticsearch scheduler
+If you want to install a proper production system, you may want to check out the more sophisticated scheduled elasticsearch installation using the [Mesosphere Elasticsearch scheduler](https://github.com/mesosphere/dcos-commons/tree/master/frameworks/elastic). With this scheduler you get custom behavior in case of failure, scaling, updating and many more edge cases. As you can see below, this package requires a little bit more resources than our existing Elasticsearch configuration, therefore we stick to our already deployed version.
+
+![Utilization 1](images/sdk.png)
+ 
+### 1.2 Deploy our system to DC/OS
 If you have the DC/OS CLI installed, you can simply run `dcos marathon group add marathon-configuration.json` to install our group of applications. You can do this via the UI as well.
 
 In order to expose this application to the outside, you will need to install Marathon-LB. Marathon-LB is a dynamic HAproxy that will automatically configure the applications running in Marathon. If you have an application with `HAPROXY` labels, Marathon-LB will route load balanced traffic from the outside to the healthy running instances. You can install Marathon-LB via the UI or via the CLI. Simply run `dcos package install marathon-lb`.
@@ -366,7 +445,7 @@ After installation is finished, we should see cluster utilization as shown below
 
 This is the first time, we see the DC/OS dashboard in this demo. This dashboard combines the most important facts an operates cares about when he gets paged at 3am. You see an aggregated view on your resources, you see an aggregated view on your cpu, memory and disk allocations. Furthermore you see the amount and health status of your deployed applications and about the health of DC/OS itself. If you would scroll down in the real dashboard, you would see information about the nodes of this cluster. But the fact that this cluster contains 7 agents is just a detail and only relevant if the other numbers are not good.
 
-### 1.2 See it working
+### 1.3 See it working
 Point your browser to your public IP. You will get an answer like this:
 
 ```
@@ -381,13 +460,13 @@ Point your browser to your public IP. You will get an answer like this:
 
 Well, sounds like a decent lager! Germans aren't known for being wordy ;-).
 
-### 1.3 Scale it
+### 1.4 Scale it
 Now that we've installed the application, let's scale it. Simply run `dcos marathon update /beer/service instances=20`. This will change the property `instances` to 20 and start a deployment to reach this target instance count. If your cluster does not have enough resources, a scale to 5 is also fine.
 
-### 1.4 Break it
+### 1.5 Break it
 Ok, let's break it! Remember that we talked about health checks and how you can toggle them in our service? Run `curl -XDELETE https://your.public.elb.amazonaws.com/health` to change the health check of one running instance. Navigate to the DC/OS UI to see one unhealthy instance. After around 20 seconds, this unhealthy application will be replaced with a new one. This is why a health check is performed every 2 seconds and we configured 10 maximum consecutive failures.
 
-### 1.5 Update it
+### 1.6 Update it
 Most configuration changes will trigger a new deployment. Usually, you would reconfigure your application to use a new Docker version or change endpoints or something similar. In this example, we will update our environment variable `VERSION`. Simply go to the UI and navigate to the Java service, and then to the environment section. You can change the configuration from 3 to 4 here. When you hit the save button, you will trigger a rolling deployment. If you now repeatedly refresh your browser tab with the beer of the day responses, you will see that sometimes you will get a `"version": "3"` and sometimes a `"version": "4"`.
 
 ## 2. Check Elasticsearch for logging synchronization
@@ -466,7 +545,7 @@ After installing Zeppelin and running our Map/Reduce job, we should see a cluste
 
 WOW! We increased the CPU utilization nearly to maximum to run our Spark job and went from initially 7 running tasks to 22. This is great 🎉.
 
-If we want to continue in this demo and install Elasticsearch, we need to give resources back to the cluster and uninstall Zeppelin. But this is no problem, because Mesos is all about using only currently needed resources and give it back afterwards.
+If we want to continue in this demo and run our Elasticsearch migration, we need to give resources back to the cluster and uninstall Zeppelin. But this is no problem, because Mesos is all about using only currently needed resources and give it back afterwards.
 
 
 ## 6. Elasticsearch as full text search

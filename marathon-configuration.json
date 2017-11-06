@@ -161,10 +161,29 @@
                      }
                   }
                ]
-            }
+            },
+            "volumes": [
+               {
+                 "containerPath":"esdata",
+                 "mode":"RW",
+                 "persistent": {
+                   "type":"root",
+                   "size":5000
+                 }
+               },
+               {
+                 "containerPath": "/usr/share/elasticsearch/data",
+                 "hostPath": "esdata",
+                 "mode": "RW"
+               }
+            ]
          },
          "env":{
             "ES_JAVA_OPTS":"-Xmx3072m -Xms3072m"
+         },
+         "unreachableStrategy": {
+            "inactiveAfterSeconds": 300,
+            "expunceAfterSeconds": 600
          }
       },
       {
