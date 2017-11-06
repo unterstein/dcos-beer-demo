@@ -29,6 +29,14 @@ In general, there are three different kinds of applications.
 
 3. But what if you are operating a database that was designed for distributed systems, like `Elasticsearch`, `Cassandra`, or similar data stores? They hold business-relevant data and provide a replication layer within the database. It would wasteful to use a distributed storage layer if the application is able to solve this problem on its own. In Mesos, you can use local persistent volumes. With this feature, it is possible to label a dedicated space on the local disk and, if the application terminates, the replacement application can be re-scheduled to the exact same data again. It doesn't matter if the application crashed because of an error, or if this was a planned maintenance or update. The already-used data can be re-used and the application can decide if it wants to re-use the data and only replicate the last few minutes or if a full replication is needed.
 
+## Demo on youtube
+If you are totally new to [DC/OS](https://dcos.io/) or container orchestration in general, I would recommend you to visit our website and check the [documentation](https://dcos.io/docs/1.10/) section.
+
+If you don't want to read documentation and a more entertaining (Monkey Island™) introduction, I am inviting you to watch this youbube video 👇❤️
+
+[![Youtube talk](images/youtube.png)](https://www.youtube.com/watch?v=u2mpN2GxfVY)
+
+
 ## The domain
 In this demo, we are talking all about beer. The old website [openbeerdb.com](https://openbeerdb.com) offers an outdated list of beer, breweries, beer categories, and beer styles as downloadable sql files. But age doesn't matter for this demo, as long as you are old enough to drink.
 
