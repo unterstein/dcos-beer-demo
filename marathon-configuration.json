@@ -180,10 +180,6 @@
          },
          "env":{
             "ES_JAVA_OPTS":"-Xmx3072m -Xms3072m"
-         },
-         "unreachableStrategy": {
-            "inactiveAfterSeconds": 300,
-            "expunceAfterSeconds": 600
          }
       },
       {
