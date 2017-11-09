@@ -129,6 +129,8 @@ You find the properties `hostAddress` and `version`, which are for demoing purpo
 You'll also find the name of our beer of the day, the style of the beer, and a description. This beer description sounds really tasty!
 
 ### 1.1 DC/OS application definition
+**Note:** In order to deploy all parts of this demo successfully, I would recomment so spin up a cluster with at least 7 private DC/OS nodes.
+
 Similar to a Docker Compose file, you can find a marathon group definition in the `marathon-configuration.json` file.
 
 ```
