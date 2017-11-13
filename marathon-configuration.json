@@ -138,6 +138,7 @@
                "maxConsecutiveFailures":10
             }
          ],
+         "cmd":"/docker-entrypoint.sh -Ediscovery.type=single-node -Etransport.host=0.0.0.0",
          "container":{
             "type":"DOCKER",
             "docker":{
