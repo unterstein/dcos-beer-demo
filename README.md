@@ -319,7 +319,7 @@ Similar to a Docker Compose file, you can find a marathon group definition in th
          },
          "unreachableStrategy": {
             "inactiveAfterSeconds": 300,
-            "expunceAfterSeconds": 600
+            "expungeAfterSeconds": 600
          }
       },
       {
@@ -409,7 +409,7 @@ Ok, let's start with Elasticsearch and the three main new configuration options 
 ```
 
 
-Elasticsearch is a distributed database. As discussed earlier, you don't need distributed storage for a distributed database, because you would waste a lot of performance when you have replication on application layer and on storage layer. But on the other side you don't want to loose all your data, when you restart Elasticsearch. In DC/OS you have the option to use [local persistent volumes](http://mesosphere.github.io/marathon/docs/persistent-volumes.html). They allow you to label space on the local disk. If an instance is shut down, due to failure or maintenance, DC/OS is waiting to see this data again and is able to restart the replication instance on the exact same data again. In best case this prevent Elasticsearch from a full replication and leads to a smaller replication for only the last couple of minutes.
+Elasticsearch is a distributed database. As discussed earlier, you don't need distributed storage for a distributed database, because you would waste a lot of performance when you have replication on application layer and on storage layer. But on the other side you don't want to loose all your data, when you restart Elasticsearch. In DC/OS you have the option to use [local persistent volumes](http://mesosphere.github.io/marathon/docs/persistent-volumes.html). They allow you to label space on the local disk. If an instance is shut down, due to failure or maintenance, DC/OS is waiting to see this data again and is able to restart the replication instance on the exact same data again. In best case this prevents Elasticsearch from a full replication and leads to a smaller replication for only the last couple of minutes.
 
 ```
 "volumes": [
@@ -434,7 +434,7 @@ In a highly distributed system, you eventually lose nodes, applications are unre
 ```
 "unreachableStrategy": {
     "inactiveAfterSeconds": 300,
-    "expunceAfterSeconds": 600
+    "expungeAfterSeconds": 600
 }
 ```
 
